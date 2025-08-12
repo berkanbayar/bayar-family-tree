@@ -165,72 +165,70 @@
         }
 
         .generation-btn {
-            padding: 10px 16px;
+            padding: 8px 12px;
             border: none;
             background: #e8f4f8;
             color: #2c5aa0;
             border-radius: 15px;
-            font-size: 12px;
+            font-size: 11px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s ease;
             white-space: nowrap;
-            min-width: 60px;
+            min-width: 50px;
             min-height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
-            -webkit-tap-highlight-color: transparent;
+            -webkit-tap-highlight-color: rgba(44, 90, 160, 0.3);
             touch-action: manipulation;
             user-select: none;
             -webkit-user-select: none;
-            pointer-events: auto;
             position: relative;
             z-index: 10;
+            flex-shrink: 0;
         }
         
         .generation-btn:active {
-            transform: scale(0.95);
             background: #d0e8f0;
+            transform: scale(0.98);
         }
 
         .generation-btn.active {
             background: #2c5aa0;
             color: white;
-            transform: scale(1.02);
         }
 
         .filter-btn {
-            padding: 12px 18px;
+            padding: 10px 14px;
             border: none;
             background: #f0f0f0;
             border-radius: 20px;
-            font-size: 14px;
+            font-size: 13px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s ease;
             white-space: nowrap;
             min-height: 44px;
             min-width: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
-            -webkit-tap-highlight-color: transparent;
+            -webkit-tap-highlight-color: rgba(102, 126, 234, 0.3);
             touch-action: manipulation;
             user-select: none;
             -webkit-user-select: none;
-            pointer-events: auto;
             position: relative;
             z-index: 10;
+            flex-shrink: 0;
         }
         
         .filter-btn:active {
-            transform: scale(0.95);
             background: #e0e0e0;
+            transform: scale(0.98);
         }
 
         .filter-btn.active {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
-            transform: scale(1.02);
         }
 
         .tree-container {
@@ -271,21 +269,20 @@
             margin-bottom: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s ease;
             position: relative;
             overflow: hidden;
-            -webkit-tap-highlight-color: transparent;
+            -webkit-tap-highlight-color: rgba(118, 75, 162, 0.3);
             touch-action: manipulation;
             min-height: 44px;
             user-select: none;
             -webkit-user-select: none;
-            pointer-events: auto;
             z-index: 1;
         }
         
         .person-card:active {
             background: #f8f8f8;
-            transform: scale(0.98);
+            transform: scale(0.99);
         }
 
         .person-card::before {
@@ -401,22 +398,7 @@
         }
         
         .floating-info {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 10px 15px;
-            border-radius: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            font-size: 12px;
-            color: #666;
-            z-index: 99;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            display: none;
         }
 
         .empty-state {
@@ -444,22 +426,24 @@
             }
             
             .filter-btn {
-                padding: 14px 20px;
-                font-size: 15px;
+                padding: 10px 12px;
+                font-size: 12px;
+                min-width: 40px;
             }
             
             .generation-btn {
-                padding: 12px 18px;
-                font-size: 13px;
+                padding: 8px 10px;
+                font-size: 10px;
+                min-width: 45px;
             }
             
             .upload-btn, .save-btn {
-                padding: 16px 20px;
-                font-size: 15px;
+                padding: 14px 18px;
+                font-size: 13px;
             }
             
             .search-box {
-                padding: 18px;
+                padding: 16px;
                 font-size: 16px;
             }
 
@@ -490,7 +474,7 @@
             border-radius: 20px;
             font-size: 14px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s ease;
             opacity: 0.7;
             position: relative;
             overflow: hidden;
@@ -499,17 +483,16 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            -webkit-tap-highlight-color: transparent;
+            -webkit-tap-highlight-color: rgba(102, 126, 234, 0.3);
             touch-action: manipulation;
             user-select: none;
             -webkit-user-select: none;
-            pointer-events: auto;
             z-index: 99;
         }
         
         .upload-btn:active, .save-btn:active {
-            transform: scale(0.95);
             background: #f0f0f0;
+            transform: scale(0.98);
         }
 
         .upload-btn:hover, .save-btn:hover {
@@ -2978,11 +2961,7 @@
                 </div>
             </div></div>
 
-    <div class="floating-info">
-        💡 Detaylar için kişiye dokunun
-    </div>
-
-    <div class="toast success show" id="toast">✅ Aile ağacı başarıyla yüklendi!</div>
+    <div class="toast success" id="toast">✅ Başarıyla yüklendi!</div>
     
 
     <script>
@@ -3028,7 +3007,10 @@
             toast.textContent = message;
             toast.className = `toast ${type}`;
             toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 4000);
+            
+            // Auto hide after different durations based on type
+            const duration = type === 'success' ? 2000 : type === 'error' ? 4000 : 3000;
+            setTimeout(() => toast.classList.remove('show'), duration);
         }
 
         function triggerFileUpload() {
@@ -3072,6 +3054,12 @@
                     e.stopPropagation();
                     triggerFileUpload();
                 });
+                
+                // iOS Safari fix
+                uploadBtn.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    this.click();
+                });
             }
 
             // Save button
@@ -3081,6 +3069,12 @@
                     e.preventDefault();
                     e.stopPropagation();
                     saveWithData();
+                });
+                
+                // iOS Safari fix
+                saveBtn.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    this.click();
                 });
             }
 
@@ -3094,6 +3088,12 @@
                     if (filter) {
                         filterBy(filter, this);
                     }
+                });
+                
+                // iOS Safari fix
+                button.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    this.click();
                 });
             });
 
@@ -3155,7 +3155,7 @@
                         loadedData = jsonData;
                         processData(jsonData);
                         document.getElementById('saveBtn').classList.add('show');
-                        showToast('✅ Aile ağacı başarıyla yüklendi!', 'success');
+                        showToast('✅ Başarıyla yüklendi!', 'success');
                     } catch (error) {
                         console.error('Veri işleme hatası:', error);
                         showToast(`❌ Veri işleme hatası: ${error.message}`, 'error');
@@ -3321,10 +3321,23 @@
         function setupPersonCardHandlers() {
             const personCards = document.querySelectorAll('.person-card');
             personCards.forEach(card => {
+                // Remove any existing listeners
+                card.replaceWith(card.cloneNode(true));
+            });
+            
+            // Re-select after cloning
+            const newPersonCards = document.querySelectorAll('.person-card');
+            newPersonCards.forEach(card => {
                 card.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     toggleDetails(this);
+                });
+                
+                // iOS Safari touchend fix
+                card.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    this.click();
                 });
             });
         }
@@ -3515,12 +3528,20 @@
             debugLog(`Promise hatası: ${e.reason}`, 'error');
         });
 
-        // Prevent iOS safari bounce effect
+        // Prevent iOS safari bounce effect and improve touch handling
         document.addEventListener('touchmove', function(e) {
-            if (e.target.closest('.tree-container, .filter-buttons, .generation-filters')) {
+            // Allow scrolling in specific containers
+            if (e.target.closest('.tree-container, .filter-buttons, .generation-filters, .search-box')) {
                 return;
             }
             e.preventDefault();
+        }, { passive: false });
+        
+        // Prevent double-tap zoom on buttons
+        document.addEventListener('touchend', function(e) {
+            if (e.target.closest('button, .person-card')) {
+                e.preventDefault();
+            }
         }, { passive: false });
     </script>
 
