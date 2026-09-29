@@ -1,0 +1,14 @@
+services:
+  soyagaci:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file: .env
+    environment:
+      DB_PATH: /data/family.db
+    volumes:
+      - soyagaci-data:/data
+
+volumes:
+  soyagaci-data:

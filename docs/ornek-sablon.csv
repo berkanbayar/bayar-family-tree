@@ -1,0 +1,9 @@
+ID,Ad Soyad,Cinsiyet,Doğum Yılı,Vefat Yılı,Hayatta,Şehir,Meslek,Telefon,E-posta,Evlilik ID,EBEVEYN Evlilik ID
+1,Hasan Örnek,E,1920,1992,H,Çorum,Çiftçi,,,E1,
+2,Fatma Örnek,K,1925,2008,H,Çorum,,,,E1,
+3a,Mehmet Ali Örnek,E,1948,,E,"Çorum, Merkez",Öğretmen,0555 000 00 01,,E2,E1
+3b,Mehmet Ali Örnek,E,1948,,E,"Çorum, Merkez",Öğretmen,,,E3,E1
+4,Ayşe Örnek,K,1952,,E,Çorum,,,,E2,
+5,Zehra Örnek,K,1960,,E,Ankara,,,,E3,
+6,Burak Örnek,E,1975,,E,İstanbul,Mühendis,,,,E2
+7,Elif Örnek,K,1985,,E,Ankara,,,,,E3
