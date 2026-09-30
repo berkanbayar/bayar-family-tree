@@ -35,13 +35,26 @@ Telefon numaraları için tek dokunuşla **Ara** ve **WhatsApp** butonları var.
 
 **Özel günler:** Menüde önümüzdeki 30 günün 🎂 doğum günleri ve 🕯️ anma günleri listelenir. Bugün bir özel gün varsa alt menüde nokta belirir ve kişinin sayfasında "Bugün doğum günü!" yazar. 29 Şubat doğumlular artık olmayan yıllarda 28 Şubat'ta hatırlatılır. Açık ve koyu tema desteklenir.
 
-## Erişim modları
+## Erişim ve giriş
 
-| `ADMIN_PASSWORD` | `VIEW_PASSWORD` | Mod | Kim ne görür |
-|---|---|---|---|
-| — | — | **Açık** | Herkes her şeyi düzenler. Sadece yerel kullanım içindir |
-| ✅ | — | **Herkese açık** | Ziyaretçi ağacı görür (telefon, e-posta ve notlar gizli). Yönetici düzenler |
-| ✅ | ✅ | **Özel** | Site kapalıdır. Aile şifresiyle giren her şeyi görür, yönetici düzenler |
+**Önerilen: e-posta ile giriş.** `ADMIN_EMAILS` tanımlanınca site kapanır. Yönetici, aile üyelerini **Menü → Üyeler ve davetler** ekranından e-postayla davet eder. Davetli kişi e-postasını yazar; ona 6 haneli bir kod ve tek dokunuşla giriş linki gider.
+
+| Kural | Değer |
+|---|---|
+| Kodun geçerliliği | 15 dakika, tek kullanımlık |
+| Hatalı deneme sınırı | Kod başına 5 deneme |
+| Kod isteme sınırı | E-posta başına saatte 5 kod |
+| Üyeden çıkarılınca | Kişinin açık oturumu da hemen kapanır |
+| Davetli olmayan biri e-postasını yazarsa | Kod gönderilmez; kimin üye olduğu dışarıdan anlaşılmaz |
+
+| Ayar | Mod | Kim ne görür |
+|---|---|---|
+| Hiçbiri | **Açık** | Herkes düzenler (sadece yerel geliştirme) |
+| `ADMIN_EMAILS` | **Özel** | Sadece davetliler. Aile üyesi görür, yönetici düzenler |
+| `ADMIN_EMAILS` + `PUBLIC_VIEW=1` | **Herkese açık** | Ziyaretçi ağacı görür (telefon, e-posta ve notlar gizli) |
+| `ADMIN_PASSWORD` (+ `VIEW_PASSWORD`) | Şifre ile | Eski basit yöntem; e-posta ile birlikte yedek olarak da kullanılabilir |
+
+SMTP ayarlanmamışsa giriş kodları sunucu konsoluna yazılır; bu yerel denemeler için kullanışlıdır.
 
 ## Excel formatı
 

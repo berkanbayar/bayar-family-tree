@@ -94,7 +94,7 @@ export function render(ctx, id) {
         ${input('last_name', 'Soyad', v.last_name, 'autocomplete="off" autocapitalize="words"')}
         <div class="field">
           <span>Cinsiyet</span>
-          <div class="segmented">
+          <div class="segmented gender">
             ${[['E', 'Erkek'], ['K', 'Kadın'], ['', 'Belirtilmemiş']].map(
               ([val, text]) => html`<label><input type="radio" name="gender" value="${val}" ${v.gender === val ? raw('checked') : ''}><span>${text}</span></label>`,
             )}

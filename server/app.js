@@ -1,6 +1,8 @@
 import express from 'express';
 import { createAuth } from './auth.js';
 import { badRequest, HttpError } from './errors.js';
+import { createMailer } from './mailer.js';
+import { createMembers } from './members.js';
 import { backupToRecords, createRepo } from './repo.js';
 import { recordsToRows, rowsToRecords } from './sheet.js';
 
@@ -21,10 +23,12 @@ const id = (value) => {
   return n;
 };
 
-export function createApp({ db, config }) {
+export function createApp({ db, config, mailer = createMailer(config) }) {
   const app = express();
   const repo = createRepo(db);
-  const auth = createAuth(config);
+  const auth = createAuth(config, db, mailer);
+  const members = createMembers(db, config);
+  app.locals.authMode = auth.mode;
 
   if (config.trustProxy) app.set('trust proxy', 1);
   app.disable('x-powered-by');
@@ -48,7 +52,25 @@ export function createApp({ db, config }) {
 
   api.get('/health', (_req, res) => res.json({ ok: true }));
 
-  api.get('/me', (req, res) => res.json({ role: req.role, mode: auth.mode }));
+  api.get('/me', (req, res) => res.json({ role: req.role, mode: auth.mode, email: req.email, methods: auth.methods }));
+
+  api.post('/auth/request-code', async (req, res) => {
+    await auth.requestCode(req);
+    res.json({ ok: true });
+  });
+
+  api.post('/auth/verify', (req, res) => res.json({ ...auth.verifyCode(req, res), mode: auth.mode }));
+
+  api.get('/auth/link', (req, res) => auth.verifyLink(req, res));
+
+  const emailOnly = (_req, _res, next) => next(auth.methods.email ? undefined : badRequest('E-posta ile giriş kapalı (ADMIN_EMAILS tanımlı değil)'));
+  api.get('/members', edit, emailOnly, (_req, res) => res.json(members.list()));
+  api.post('/members', edit, emailOnly, (req, res) => res.status(201).json(members.add(req.body)));
+  api.patch('/members/:id', edit, emailOnly, (req, res) => res.json(members.update(id(req.params.id), req.body)));
+  api.delete('/members/:id', edit, emailOnly, (req, res) => {
+    members.remove(id(req.params.id));
+    res.status(204).end();
+  });
 
   api.post('/login', (req, res) => res.json({ role: auth.login(req, res), mode: auth.mode }));
 
@@ -59,7 +81,7 @@ export function createApp({ db, config }) {
 
   api.get('/family', view, (req, res) => {
     const includePrivate = req.role === 'editor' || req.role === 'member';
-    res.json({ ...repo.getFamily({ includePrivate }), role: req.role, mode: auth.mode });
+    res.json({ ...repo.getFamily({ includePrivate }), role: req.role, mode: auth.mode, email: req.email, methods: auth.methods });
   });
 
   api.post('/people', edit, (req, res) => {

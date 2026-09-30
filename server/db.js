@@ -52,6 +52,29 @@ const MIGRATIONS = [
   ALTER TABLE persons ADD COLUMN death_place TEXT NOT NULL DEFAULT '';
   ALTER TABLE persons ADD COLUMN burial_place TEXT NOT NULL DEFAULT '';
   `,
+  // v3: e-posta ile giriş: davetli üyeler ve tek kullanımlık giriş kodları
+  `
+  CREATE TABLE members (
+    id            INTEGER PRIMARY KEY,
+    email         TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    name          TEXT NOT NULL DEFAULT '',
+    role          TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('member', 'editor')),
+    created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+    last_login_at TEXT
+  );
+
+  CREATE TABLE login_codes (
+    id         INTEGER PRIMARY KEY,
+    email      TEXT NOT NULL COLLATE NOCASE,
+    code_hash  TEXT NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at INTEGER NOT NULL,
+    attempts   INTEGER NOT NULL DEFAULT 0,
+    used       INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL
+  );
+  CREATE INDEX idx_login_codes_email ON login_codes(email, created_at);
+  `,
 ];
 
 export function openDb(file) {

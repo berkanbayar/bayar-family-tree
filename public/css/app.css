@@ -498,8 +498,8 @@ details[open] > summary .tcount { background: var(--primary); color: var(--prima
   transition: transform .25s var(--spring), background .15s;
 }
 .segmented input:checked + span { background: var(--surface); color: var(--text); box-shadow: var(--shadow); transform: scale(1.03); }
-.segmented label:first-child input:checked + span { color: var(--male); }
-.segmented label:nth-child(2) input:checked + span { color: var(--female); }
+.segmented.gender label:first-child input:checked + span { color: var(--male); }
+.segmented.gender label:nth-child(2) input:checked + span { color: var(--female); }
 .segmented input:focus-visible + span { outline: 2px solid var(--primary); }
 .switch { display: flex; align-items: center; gap: 12px; font-weight: 800; cursor: pointer; }
 .switch input { position: absolute; opacity: 0; }
@@ -557,6 +557,14 @@ details[open] > summary .tcount { background: var(--primary); color: var(--prima
 .about { text-align: center; margin-top: 36px; }
 
 /* ============ Giriş ============ */
+.code-input { text-align: center; font-size: 30px; font-weight: 900; letter-spacing: 10px; padding: 14px 10px; }
+.session-email { font-weight: 800; color: var(--primary-deep); }
+.invite { background: linear-gradient(160deg, var(--peach-soft), var(--surface) 55%); }
+.invite .sheet-title { margin: 0; }
+.member-row { display: flex; align-items: center; gap: 10px; padding: 10px 8px; }
+.member-row + .member-row { border-top: 1.5px dashed var(--border); }
+.member-icon { display: grid; place-items: center; flex: none; width: 42px; height: 42px; border-radius: 14px; background: var(--surface-2); font-size: 20px; }
+.member-row .btn-sm { flex: none; }
 .login { text-align: center; padding-top: 20px; }
 .login-logo {
   display: inline-grid; place-items: center; width: 110px; height: 110px; border-radius: 38px;

@@ -6,6 +6,8 @@ export const store = {
   loaded: false,
   role: null,
   mode: null,
+  email: null,
+  methods: { email: false, password: false },
   people: [],
   unions: [],
   byId: new Map(),
@@ -24,10 +26,14 @@ export async function loadSession() {
   const me = await api.get('/me');
   store.role = me.role;
   store.mode = me.mode;
+  store.email = me.email;
+  store.methods = me.methods ?? store.methods;
   return me;
 }
 
-function index({ people, unions, role, mode }) {
+function index({ people, unions, role, mode, email, methods }) {
+  store.email = email ?? null;
+  if (methods) store.methods = methods;
   store.people = people;
   store.unions = unions;
   store.role = role;

@@ -1,6 +1,6 @@
 # 🚀 Hetzner sunucusuna kurulum
 
-Hedef: `https://soyagaci.dijitapro.com.tr` (alt alan adı değişebilir; aşağıda `ALAN_ADI` diye geçer).
+Hedef: `https://bayar.dijitapro.com.tr` (alt alan adı değişebilir; aşağıda `ALAN_ADI` diye geçer).
 
 ## Mimari
 
@@ -21,10 +21,10 @@ Alan adının DNS panelinde bir kayıt açın:
 
 | Tip | Ad | Değer |
 |---|---|---|
-| `A` | `soyagaci` | Hetzner sunucusunun IPv4 adresi |
-| `AAAA` (varsa) | `soyagaci` | Sunucunun IPv6 adresi |
+| `A` | `bayar` | Hetzner sunucusunun IPv4 adresi |
+| `AAAA` (varsa) | `bayar` | Sunucunun IPv6 adresi |
 
-Kontrol: `dig +short soyagaci.dijitapro.com.tr`
+Kontrol: `dig +short bayar.dijitapro.com.tr`
 
 ## 2. Kodu al ve ayarla
 
@@ -40,12 +40,28 @@ echo "SESSION_SECRET=$(openssl rand -hex 32)" >> .env
 
 `.env` içinde doldurulacaklar:
 
-| Değişken | Öneri |
+| Değişken | Değer |
 |---|---|
-| `ADMIN_PASSWORD` | Güçlü bir şifre (düzenleme yetkisi) |
-| `VIEW_PASSWORD` | Aile şifresi. **Önerilen:** telefon ve adres bilgileri olduğu için siteyi kapalı tutar |
+| `APP_URL` | `https://bayar.dijitapro.com.tr` (maildeki giriş linki bu adresle üretilir) |
+| `ADMIN_EMAILS` | Yöneticilerin e-postaları, virgülle ayrılmış (örn. `berkanki@gmail.com`) |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | Giriş kodlarını gönderecek mail hesabı (aşağıdaki tabloya bakın) |
+| `SMTP_FROM` | Gönderen adresi, örn. `soyagaci@dijitapro.com.tr` |
 | `SESSION_SECRET` | Yukarıdaki komutla üretildi |
 | `APP_PORT` | Varsayılan `3000`. Sunucuda 3000 doluysa boş bir port seçin (örn. `3107`) |
+| `PUBLIC_VIEW` | Boş bırakın: site kapalı kalır, sadece davetliler girer |
+
+### E-posta (SMTP) seçenekleri
+
+| dijitapro.com.tr maili nerede? | `SMTP_HOST` | `SMTP_PORT` | Not |
+|---|---|---|---|
+| Google Workspace | `smtp.gmail.com` | `587` | Hesapta 2 adımlı doğrulama + **uygulama şifresi** gerekir; `SMTP_USER` = mail adresi |
+| Microsoft 365 / Outlook | `smtp.office365.com` | `587` | Posta kutusunda *Authenticated SMTP* açık olmalı |
+| Yandex / cPanel / kendi mail sunucusu | sağlayıcının SMTP adresi | `587` veya `465` | 465 ise `SMTP_SECURE=1` |
+| Hiçbiri / hızlı çözüm | Brevo, Resend, Mailgun vb. | `587` | Ücretsiz katman yeterli; alan adı için SPF/DKIM kayıtlarını eklemek gerekir |
+
+> Kod mailleri spam'e düşmesin diye gönderen alan adında **SPF** ve **DKIM** kayıtları olmalı. Mevcut kurumsal mail sağlayıcısı kullanılıyorsa bunlar genelde zaten vardır.
+
+SMTP'yi denemek için: siteyi açın, yönetici e-postasını yazıp **Kod gönder**'e basın. Mail gelmezse `docker compose logs soyagaci | grep -i mail`.
 
 > `.env` içinde aynı değişken iki kez geçerse **son satır** geçerlidir. `.env.example`'daki boş `SESSION_SECRET=` satırını silin.
 
@@ -71,7 +87,7 @@ systemctl is-active caddy nginx 2>/dev/null
 `Caddyfile`'a ekleyin, sonra `caddy reload` (veya `docker exec <caddy> caddy reload --config /etc/caddy/Caddyfile`):
 
 ```
-soyagaci.dijitapro.com.tr {
+bayar.dijitapro.com.tr {
     encode gzip zstd
     reverse_proxy 127.0.0.1:3000
 }
@@ -81,12 +97,12 @@ soyagaci.dijitapro.com.tr {
 
 ### B) Nginx + Certbot
 
-`/etc/nginx/sites-available/soyagaci.dijitapro.com.tr`:
+`/etc/nginx/sites-available/bayar.dijitapro.com.tr`:
 
 ```nginx
 server {
     listen 80;
-    server_name soyagaci.dijitapro.com.tr;
+    server_name bayar.dijitapro.com.tr;
 
     client_max_body_size 12m;   # Excel / yedek yükleme
 
@@ -100,9 +116,9 @@ server {
 ```
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/soyagaci.dijitapro.com.tr /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/bayar.dijitapro.com.tr /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
-sudo certbot --nginx -d soyagaci.dijitapro.com.tr
+sudo certbot --nginx -d bayar.dijitapro.com.tr
 ```
 
 ### C) Traefik
@@ -116,7 +132,7 @@ services:
     networks: [proxy]
     labels:
       - traefik.enable=true
-      - traefik.http.routers.soyagaci.rule=Host(`soyagaci.dijitapro.com.tr`)
+      - traefik.http.routers.soyagaci.rule=Host(`bayar.dijitapro.com.tr`)
       - traefik.http.routers.soyagaci.entrypoints=websecure
       - traefik.http.routers.soyagaci.tls.certresolver=letsencrypt
       - traefik.http.services.soyagaci.loadbalancer.server.port=3000
@@ -148,9 +164,11 @@ docker compose start soyagaci
 
 | Kontrol | Komut / Yöntem |
 |---|---|
-| HTTPS açılıyor | `curl -sI https://soyagaci.dijitapro.com.tr` → `200` |
-| API sağlıklı | `curl -s https://soyagaci.dijitapro.com.tr/api/health` → `{"ok":true}` |
-| Site kapalı (özel mod) | `curl -s https://soyagaci.dijitapro.com.tr/api/family` → `401` |
+| HTTPS açılıyor | `curl -sI https://bayar.dijitapro.com.tr` → `200` |
+| API sağlıklı | `curl -s https://bayar.dijitapro.com.tr/api/health` → `{"ok":true}` |
+| Site kapalı (özel mod) | `curl -s https://bayar.dijitapro.com.tr/api/family` → `401` |
+| E-posta ile giriş | Yönetici e-postasına kod geliyor ve kodla giriş yapılabiliyor |
+| Giriş linki doğru adreste | Maildeki link `https://bayar.dijitapro.com.tr/api/auth/link?...` ile başlıyor |
 | Port dışarıya kapalı | Başka bir makineden `curl http://SUNUCU_IP:3000` → bağlantı reddedilmeli |
 | Oturum çerezi güvenli | Giriş sonrası tarayıcıda çerez `Secure` ve `HttpOnly` |
 | Yedek çalışıyor | `ls /var/backups/bayar-soyagaci` |
@@ -163,9 +181,12 @@ git pull
 docker compose up -d --build     # veritabanı şeması kendiliğinden güncellenir
 ```
 
-## 8. İlk veri
+## 8. İlk veri ve davetler
 
-Tarayıcıdan yönetici şifresiyle giriş yapın → **Menü → Excel / CSV içe aktar**.
+1. Tarayıcıdan yönetici e-postanızla giriş yapın.
+2. **Menü → Excel / CSV içe aktar** ile aile verisini yükleyin.
+3. **Menü → Üyeler ve davetler** ekranından aile üyelerinin e-postalarını ekleyin (aile üyesi = görür, yönetici = düzenler).
+4. Linki aileyle paylaşın: kişi e-postasını yazar, gelen kodla girer.
 Şablon: [`docs/ornek-sablon.csv`](ornek-sablon.csv)
 
 ---
@@ -176,20 +197,24 @@ Aşağıdaki metni sunucuya SSH erişimi olan Claude Code oturumuna yapıştır�
 
 ```text
 berkanbayar/bayar-family-tree reposundaki "Bayar Soy Ağacı" uygulamasını Hetzner sunucumuzda
-https://soyagaci.dijitapro.com.tr adresinde yayınla. Adım adım rehber repoda: docs/DEPLOY.md
-(dal: claude/great-archimedes-616e6e).
+https://bayar.dijitapro.com.tr adresinde yayınla. Adım adım rehber repoda: docs/DEPLOY.md
+(dal: claude/great-archimedes-616e6e). Bu işi hazırlayan bulut oturumu: bayar-family-tree-c8
+(session_01MzVZ3dkM4mt4ULRdLqX41E); ulaşabiliyorsan soruları ona da iletebilirsin.
 
 Yapman gerekenler:
 1. Hangi Hetzner sunucusunu kullanacağını bana sor (ya da kayıtlardan uygun olanı öner) ve SSH ile bağlan.
-2. soyagaci.dijitapro.com.tr için DNS A kaydı var mı kontrol et; yoksa hangi IP'ye açılması gerektiğini söyle ve bekle.
-3. Repoyu /opt/bayar-soyagaci'ye klonla, .env oluştur:
+2. bayar.dijitapro.com.tr için DNS A kaydı var mı kontrol et; yoksa hangi IP'ye açılması gerektiğini söyle ve bekle.
+3. dijitapro.com.tr maillerinin nerede olduğunu tespit et (MX kaydı) ve giriş kodlarını gönderecek SMTP
+   hesabını benimle netleştir (DEPLOY.md "E-posta (SMTP) seçenekleri"). SPF/DKIM durumunu raporla.
+4. Repoyu /opt/bayar-soyagaci'ye klonla, .env.example'dan .env oluştur:
+   - APP_URL=https://bayar.dijitapro.com.tr, ADMIN_EMAILS=berkanki@gmail.com
    - SESSION_SECRET: openssl rand -hex 32
-   - ADMIN_PASSWORD ve VIEW_PASSWORD: güçlü şifreler üret, bana güvenli şekilde ilet (loglara yazma)
+   - SMTP_* değerleri; şifreleri loglara veya sohbete açık yazma
    - APP_PORT: 3000 doluysa boş bir port seç
-4. docker compose up -d --build; container "healthy" olana kadar bekle.
-5. Sunucudaki mevcut ters vekili tespit et (Caddy / Nginx / Traefik) ve DEPLOY.md'deki ilgili bölüme
-   göre alt alan adını HTTPS ile bağla. Mevcut diğer sitelerin ayarlarına dokunma; değişiklikten önce
-   config'in yedeğini al ve reload öncesi syntax kontrolü yap.
-6. Gecelik yedek cron'unu kur (DEPLOY.md bölüm 5).
-7. DEPLOY.md bölüm 6'daki kontrol listesini çalıştır ve sonuçları tablo olarak raporla.
+5. docker compose up -d --build; container "healthy" olana kadar bekle.
+6. Sunucudaki mevcut ters vekili tespit et (Caddy / Nginx / Traefik) ve DEPLOY.md'deki ilgili bölüme göre
+   alt alan adını HTTPS ile bağla. Diğer sitelerin ayarlarına dokunma; değişiklikten önce config yedeği al,
+   reload öncesi syntax kontrolü yap.
+7. Gecelik yedek cron'unu kur (DEPLOY.md bölüm 5).
+8. DEPLOY.md bölüm 6'daki kontrol listesini çalıştır (mail ile giriş dahil) ve sonuçları tablo olarak raporla.
 ```

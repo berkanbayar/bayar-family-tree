@@ -4,6 +4,7 @@ import { emptyState, html, toast } from './ui.js';
 import * as editView from './views/edit.js';
 import * as familyView from './views/family.js';
 import * as loginView from './views/login.js';
+import * as membersView from './views/members.js';
 import * as menuView from './views/menu.js';
 import * as peopleView from './views/people.js';
 import * as treeView from './views/tree.js';
@@ -19,6 +20,7 @@ const routes = [
   { path: /^\/duzenle\/(\d+)$/, tab: null, render: (ctx, [id]) => editView.render(ctx, Number(id)) },
   { path: /^\/yeni$/, tab: null, render: (ctx) => editView.render(ctx, null) },
   { path: /^\/giris$/, tab: 'menu', render: (ctx) => loginView.render(ctx), public: true },
+  { path: /^\/uyeler$/, tab: 'menu', render: (ctx) => membersView.render(ctx) },
 ];
 
 const main = document.getElementById('main');

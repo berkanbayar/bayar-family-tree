@@ -39,9 +39,9 @@ export function render(ctx) {
     <section class="section">
       <h3 class="section-title"><span class="st-icon">🔑</span>Oturum</h3>
       <div class="card session">
-        <div class="session-info"><span class="session-icon">${icon}</span><div><strong>${roleName}</strong><div class="muted small">${roleText}</div></div></div>
+        <div class="session-info"><span class="session-icon">${icon}</span><div><strong>${roleName}</strong>${store.email ? html`<div class="small session-email">${store.email}</div>` : ''}<div class="muted small">${roleText}</div></div></div>
         ${store.mode === 'open'
-          ? html`<p class="warn small">⚠️ Şifre tanımlanmamış: bu kurulumda herkes düzenleyebilir. Sunucuya almadan önce <code>ADMIN_PASSWORD</code> tanımlayın.</p>`
+          ? html`<p class="warn small">⚠️ Giriş yöntemi tanımlanmamış: bu kurulumda herkes düzenleyebilir. Sunucuya almadan önce <code>ADMIN_EMAILS</code> (veya <code>ADMIN_PASSWORD</code>) tanımlayın.</p>`
           : store.role === 'editor' || store.role === 'member'
             ? html`<button class="btn btn-ghost full" type="button" data-action="logout">Çıkış yap</button>`
             : html`<a class="btn btn-primary full" href="#/giris">🔑 Giriş yap</a>`}
@@ -54,6 +54,7 @@ export function render(ctx) {
           <h3 class="section-title"><span class="st-icon">✍️</span>Kayıt</h3>
           <div class="card list">
             <a class="menu-row" href="#/yeni"><span>➕</span><span>Yeni kişi ekle</span></a>
+            ${store.methods.email ? html`<a class="menu-row" href="#/uyeler"><span>💌</span><span>Üyeler ve davetler<small>Kimin giriş yapabileceğini yönetin</small></span></a>` : ''}
           </div>
         </section>
 
