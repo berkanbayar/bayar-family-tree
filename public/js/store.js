@@ -111,6 +111,62 @@ export function siblingsOf(p) {
   return u ? childrenOf(u).filter((c) => c.id !== p.id) : [];
 }
 
+// Ebeveynlerden birinin başka evliliğinden olan kardeşler: "baba bir" / "anne bir"
+export function halfSiblingsOf(p) {
+  const own = parentUnion(p);
+  if (!own) return [];
+  const result = [];
+  const seen = new Set([p.id]);
+  for (const parent of parentsOf(p)) {
+    for (const u of unionsOf(parent)) {
+      if (u.id === own.id) continue;
+      for (const c of childrenOf(u)) {
+        if (seen.has(c.id)) continue;
+        seen.add(c.id);
+        result.push({ person: c, via: parent, label: parent.gender === 'K' ? 'Anne bir' : parent.gender === 'E' ? 'Baba bir' : 'Üvey kardeş' });
+      }
+    }
+  }
+  return result;
+}
+
+// Ebeveynlerin diğer eşleri
+export function stepParentsOf(p) {
+  const own = parentUnion(p);
+  if (!own) return [];
+  const bio = new Set(partnersOf(own).map((x) => x.id));
+  const result = [];
+  for (const parent of parentsOf(p)) {
+    for (const u of unionsOf(parent)) {
+      const other = partnerIn(u, parent);
+      if (!other || bio.has(other.id) || result.some((r) => r.person.id === other.id)) continue;
+      result.push({ person: other, via: parent, label: other.gender === 'K' ? 'Üvey anne' : other.gender === 'E' ? 'Üvey baba' : 'Üvey ebeveyn' });
+    }
+  }
+  return result;
+}
+
+// Eşin başka evliliklerinden olan çocukları
+export function stepChildrenIn(u, p) {
+  const partner = partnerIn(u, p);
+  if (!partner) return [];
+  return unionsOf(partner)
+    .filter((x) => x.id !== u.id && partnerIn(x, partner)?.id !== p.id)
+    .flatMap(childrenOf);
+}
+
+export const UNION_STATES = {
+  married: { icon: '💍', text: 'Evli' },
+  divorced: { icon: '💔', text: 'Boşandı' },
+  widowed: { icon: '🕊️', text: 'Vefatla sona erdi' },
+};
+
+// Kayıtlı durum "evli" olsa bile eşlerden biri vefat ettiyse evlilik "eşi vefat etti" sayılır
+export function unionState(u) {
+  if (u.status !== 'married') return u.status;
+  return partnersOf(u).some((x) => !x.is_alive) ? 'widowed' : 'married';
+}
+
 export function allChildrenOf(p) {
   return unionsOf(p).flatMap(childrenOf);
 }

@@ -1,4 +1,4 @@
-import { childrenOf, descendantCount, fullName, lifespan, partnerIn, roots, store, unionsOf } from '../store.js';
+import { UNION_STATES, childrenOf, descendantCount, fullName, lifespan, partnerIn, roots, store, unionState, unionsOf } from '../store.js';
 import { avatar, emptyState, html, pickPerson } from '../ui.js';
 
 const OPEN_DEPTH = 2;
@@ -56,7 +56,8 @@ function label(p) {
 
 function spouseLabel(u, p) {
   const s = partnerIn(u, p);
-  return s ? html`<a class="tspouse" href="#/kisi/${s.id}">💍 ${fullName(s)}</a>` : '';
+  const state = unionState(u);
+  return s ? html`<a class="tspouse is-${state}" href="#/kisi/${s.id}" title="${UNION_STATES[state].text}">${UNION_STATES[state].icon} ${fullName(s)}</a>` : '';
 }
 
 function node(p, depth, seen) {

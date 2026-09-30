@@ -240,7 +240,7 @@ code { background: var(--surface-2); padding: 1px 6px; border-radius: 6px; font-
 .prow-sub { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .prow::after { content: "›"; color: var(--border); font-size: 26px; font-weight: 700; line-height: 1; }
 button.prow::after { display: none; }
-.tag { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
+.tag { flex: none; font-size: 11px; font-weight: 800; padding: 2px 9px; border-radius: 999px; background: var(--lilac-soft); color: var(--lilac); }
 
 .list { padding: 6px; }
 .list > .prow + .prow { margin-top: 2px; }
@@ -279,6 +279,10 @@ button.prow::after { display: none; }
   color: var(--female); font-size: 16px;
   animation: heartbeat 2.4s ease-in-out infinite;
 }
+.heart-link.broken { animation: none; font-size: 15px; }
+.sub-title { margin: 14px 6px 8px; font-size: 13px; font-weight: 800; color: var(--muted); }
+.tile-row.step .ptile { width: 118px; padding: 12px 8px 10px; opacity: .92; }
+.tile-row.step .ptile-role { background: var(--lilac-soft); color: var(--lilac); }
 @keyframes heartbeat { 0%, 60%, 100% { transform: scale(1); } 30% { transform: scale(1.18); } }
 
 .connector {
@@ -351,6 +355,11 @@ button.prow::after { display: none; }
   position: relative; margin: 6px 4px 0 30px; padding-left: 14px;
   border-left: 3px dotted color-mix(in srgb, var(--primary) 45%, transparent);
 }
+.union.is-divorced .ribbon { background: var(--surface-2); color: var(--muted); }
+.union.is-widowed .ribbon { background: var(--lilac-soft); color: var(--lilac); }
+.children.step { border-left-color: color-mix(in srgb, var(--lilac) 45%, transparent); margin-top: 10px; }
+.children.step .children-title { color: var(--lilac); }
+.children.step .prow::before { background: var(--lilac); }
 .children-title { font-size: 13px; font-weight: 800; color: var(--primary-deep); padding: 4px 12px 2px; }
 .children .prow { position: relative; }
 .children .prow::before {
@@ -447,6 +456,8 @@ textarea.input { resize: vertical; min-height: 90px; }
 details[open] > summary .tcount { background: var(--primary); color: var(--primary-ink); transform: rotate(-4deg); }
 .tspouses { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 4px 8px; padding-left: 44px; }
 .tspouse { font-size: 12px; font-weight: 800; color: var(--female); background: var(--female-tint); padding: 2px 10px; border-radius: 999px; }
+.tspouse.is-divorced { color: var(--muted); background: var(--surface-2); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--muted) 50%, transparent); }
+.tspouse.is-widowed { color: var(--lilac); background: var(--lilac-soft); }
 .tgroup { font-size: 12px; font-weight: 900; color: var(--muted); padding: 10px 0 0 4px; }
 .tree ul > li.tgroup::before, .tree ul > li.tgroup::after { display: none; }
 

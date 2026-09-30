@@ -26,6 +26,10 @@ export const SAMPLE = {
     P('kerem', 'Kerem', 'Örnek', 'E', 2005, { city: 'İstanbul', job: 'Öğrenci', parent_union_key: 'u5' }),
     P('ece', 'Ece', 'Örnek', 'K', 2009, { city: 'İstanbul', job: 'Öğrenci', parent_union_key: 'u5' }),
     P('ada', 'Ada', 'Arslan', 'K', 2012, { parent_union_key: 'u6' }),
+    P('gul', 'Gül', 'Tekin', 'K', 1982, { city: 'Ankara' }),
+    P('derya', 'Derya', 'Örnek', 'K', 1985, { city: 'Ankara', maiden_name: 'Uçar' }),
+    P('yusuf', 'Yusuf', 'Örnek', 'E', 2006, { city: 'Ankara', job: 'Öğrenci', parent_union_key: 'u7' }),
+    P('nil', 'Nil', 'Örnek', 'K', 2015, { city: 'Ankara', parent_union_key: 'u8' }),
   ],
   unions: [
     { key: 'u1', partner1_key: 'hasan', partner2_key: 'fatma', start_year: 1946 },
@@ -34,6 +38,8 @@ export const SAMPLE = {
     { key: 'u4', partner1_key: 'osman', partner2_key: 'emine', start_year: 1976 },
     { key: 'u5', partner1_key: 'burak', partner2_key: 'selin', start_year: 2003 },
     { key: 'u6', partner1_key: 'can', partner2_key: 'elif', start_year: 2010 },
+    { key: 'u7', partner1_key: 'murat', partner2_key: 'gul', start_year: 2004, end_year: 2010, status: 'divorced' },
+    { key: 'u8', partner1_key: 'murat', partner2_key: 'derya', start_year: 2013 },
   ],
 };
 

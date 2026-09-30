@@ -71,3 +71,25 @@ test('Ad / Soyad ayrı sütunlar ve CSV başlık varyasyonları okunur', () => {
   assert.equal(people[0].maiden_name, 'Demir');
   assert.equal(people[0].birth_year, 1990);
 });
+
+test('boşanma ve ikinci evlilik Excel üzerinden korunur', () => {
+  const rows = [
+    { ID: '1a', 'Ad Soyad': 'Murat Bayar', Cinsiyet: 'E', 'Evlilik ID': 'E1', 'Evlilik Durumu': 'Boşandı', 'Boşanma Yılı': 2010 },
+    { ID: '1b', 'Ad Soyad': 'Murat Bayar', Cinsiyet: 'E', 'Evlilik ID': 'E2', 'Evlilik Durumu': 'Evli' },
+    { ID: '2', 'Ad Soyad': 'Gül Tekin', Cinsiyet: 'K', 'Evlilik ID': 'E1' },
+    { ID: '3', 'Ad Soyad': 'Derya Bayar', Cinsiyet: 'K', 'Evlilik ID': 'E2' },
+    { ID: '4', 'Ad Soyad': 'Yusuf Bayar', 'EBEVEYN Evlilik ID': 'E1' },
+    { ID: '5', 'Ad Soyad': 'Nil Bayar', 'EBEVEYN Evlilik ID': 'E2' },
+  ];
+  const first = rowsToRecords(rows);
+  const e1 = first.unions.find((u) => u.key === 'E1');
+  assert.equal(e1.status, 'divorced');
+  assert.equal(e1.end_year, 2010);
+  assert.equal(first.unions.find((u) => u.key === 'E2').status, 'married');
+
+  const repo = createRepo(openDb(':memory:'));
+  repo.replaceAll(first);
+  const again = rowsToRecords(recordsToRows(repo.getFamily({ includePrivate: true })));
+  const statuses = again.unions.map((u) => [u.status, u.end_year ?? null]).sort();
+  assert.deepEqual(statuses, [['divorced', 2010], ['married', null]]);
+});

@@ -1,11 +1,12 @@
 import { api } from '../api.js';
 import { refresh, rememberPerson } from '../app.js';
 import {
-  age, canEdit, childrenOf, fullName, lifespan, parentUnion, parentsOf, partnerIn, siblingsOf, store, unionsOf,
+  UNION_STATES, age, canEdit, childrenOf, fullName, halfSiblingsOf, lifespan, parentUnion, parentsOf, partnerIn, siblingsOf,
+  stepChildrenIn, stepParentsOf, store, unionState, unionsOf,
 } from '../store.js';
 import { avatar, confirmSheet, emptyState, html, openSheet, personRow, personTile, phoneLinks, raw, toast } from '../ui.js';
 
-const STATUS = { married: 'Evli', divorced: 'Boşandı', widowed: 'Eşi vefat etti' };
+const STATUS = Object.fromEntries(Object.entries(UNION_STATES).map(([k, v]) => [k, v.text]));
 
 const title = (icon, text) => html`<h3 class="section-title"><span class="st-icon">${icon}</span>${text}</h3>`;
 
@@ -56,15 +57,21 @@ function parentsSection(p, editor) {
   const parents = parentsOf(p);
   const u = parentUnion(p);
   const canAdd = editor && parents.length < 2;
+  const steps = stepParentsOf(p);
+  const divorced = u && unionState(u) === 'divorced';
   if (!parents.length && !editor) return '';
   const addTile = html`<a class="ptile ptile-add" href="#/yeni?type=parent&anchor=${p.id}"><span class="avatar">＋</span><span class="ptile-name">Ebeveyn ekle</span></a>`;
   return html`
     <section class="section parents">
       ${title('👪', 'Anne & Baba')}
       <div class="tile-row couple">
-        ${parents.map((x, i) => html`${i ? raw('<span class="heart-link" aria-hidden="true">♥</span>') : ''}${personTile(x, x.gender === 'K' ? 'Anne' : x.gender === 'E' ? 'Baba' : 'Ebeveyn')}`)}
+        ${parents.map((x, i) => html`${i ? raw(divorced ? '<span class="heart-link broken" title="Boşandılar">💔</span>' : '<span class="heart-link" aria-hidden="true">♥</span>') : ''}${personTile(x, x.gender === 'K' ? 'Anne' : x.gender === 'E' ? 'Baba' : 'Ebeveyn')}`)}
         ${canAdd ? addTile : ''}
       </div>
+      ${steps.length
+        ? html`<div class="sub-title">Üvey ebeveyn</div>
+          <div class="tile-row scroll step">${steps.map((s) => personTile(s.person, s.label))}</div>`
+        : ''}
       ${editor && u ? html`<button class="link-btn" data-action="unlink-parents" type="button">Ebeveyn bağlantısını kaldır</button>` : ''}
     </section>
     <div class="connector" aria-hidden="true"></div>`;
@@ -113,12 +120,15 @@ function familySection(p, editor) {
   const blocks = unions.map((u, i) => {
     const partner = partnerIn(u, p);
     const kids = childrenOf(u);
-    const label = unions.length > 1 ? `${i + 1}. evlilik` : partner ? 'Eşi' : 'Tek ebeveyn';
-    const meta = [u.start_year && `${u.start_year} evliliği`, u.status !== 'married' && STATUS[u.status]].filter(Boolean).join(' · ');
+    const stepKids = stepChildrenIn(u, p);
+    const state = unionState(u);
+    const label = unions.length > 1 ? `${i + 1}. evlilik` : !partner ? 'Tek ebeveyn' : state === 'divorced' ? 'Eski eşi' : 'Eşi';
+    const years = u.start_year ? `${u.start_year}${state !== 'married' && u.end_year ? ` – ${u.end_year}` : ''}` : state !== 'married' && u.end_year ? `– ${u.end_year}` : '';
+    const meta = [years, state !== 'married' && STATUS[state]].filter(Boolean).join(' · ');
     return html`
-      <div class="card union">
+      <div class="card union is-${state}">
         <div class="union-head">
-          <span class="union-label"><span class="ribbon">💍 ${label}</span>${meta ? html`<span class="muted small">${meta}</span>` : ''}</span>
+          <span class="union-label"><span class="ribbon">${UNION_STATES[state].icon} ${label}</span>${meta ? html`<span class="muted small">${meta}</span>` : ''}</span>
           ${editor ? html`<button class="icon-btn sm" data-action="union" data-id="${u.id}" type="button" aria-label="Evliliği düzenle">⋯</button>` : ''}
         </div>
         ${partner ? personRow(partner) : html`<div class="muted small pad">Eş bilgisi girilmemiş</div>`}
@@ -127,6 +137,12 @@ function familySection(p, editor) {
           ${kids.map((c) => personRow(c))}
           ${editor ? html`<a class="add-row" href="#/yeni?type=child&anchor=${p.id}&union=${u.id}">＋ Çocuk ekle</a>` : ''}
         </div>
+        ${stepKids.length
+          ? html`<div class="children step">
+              <div class="children-title">👣 Eşinin diğer evliliğinden (${stepKids.length})</div>
+              ${stepKids.map((c) => personRow(c, { tag: 'Üvey' }))}
+            </div>`
+          : ''}
       </div>`;
   });
   return html`
@@ -144,11 +160,12 @@ function familySection(p, editor) {
 
 function siblingsSection(p) {
   const sibs = siblingsOf(p);
-  if (!sibs.length) return '';
+  const half = halfSiblingsOf(p);
+  if (!sibs.length && !half.length) return '';
   return html`
     <section class="section">
-      ${title('🧸', `Kardeşler (${sibs.length})`)}
-      <div class="tile-row scroll">${sibs.map((s) => personTile(s))}</div>
+      ${title('🧸', `Kardeşler (${sibs.length + half.length})`)}
+      <div class="tile-row scroll">${sibs.map((s) => personTile(s))}${half.map((h) => personTile(h.person, h.label))}</div>
     </section>`;
 }
 
@@ -177,9 +194,11 @@ async function editUnion(unionId, ctx, p) {
         <label class="field"><span>Evlilik yılı</span><input class="input" name="start_year" inputmode="numeric" pattern="[0-9]{4}" value="${u.start_year ?? ''}" placeholder="örn. 1975"></label>
         <label class="field"><span>Durum</span>
           <select class="input" name="status">
-            ${Object.entries(STATUS).map(([k, v]) => html`<option value="${k}" ${k === u.status ? raw('selected') : ''}>${v}</option>`)}
+            ${Object.entries(STATUS).map(([k, v]) => html`<option value="${k}" ${k === u.status ? raw('selected') : ''}>${UNION_STATES[k].icon} ${v}</option>`)}
           </select>
         </label>
+        <label class="field" data-role="end" ${u.status === 'married' ? raw('hidden') : ''}><span>Bitiş yılı (boşanma / vefat)</span><input class="input" name="end_year" inputmode="numeric" pattern="[0-9]{4}" value="${u.end_year ?? ''}" placeholder="örn. 1990"></label>
+        <p class="muted small">🕊️ Eşlerden biri vefat etmişse evlilik otomatik olarak "vefatla sona erdi" görünür.</p>
         <div class="sheet-actions">
           <button class="btn btn-ghost" type="button" data-close>Vazgeç</button>
           <button class="btn btn-primary" type="submit">Kaydet</button>
@@ -188,11 +207,16 @@ async function editUnion(unionId, ctx, p) {
       <button class="link-btn danger" type="button" data-close="delete">Evlilik kaydını sil</button>`.s,
     {
       onMount(dialog, close) {
-        dialog.querySelector('[data-role=form]').addEventListener('submit', async (e) => {
+        const form = dialog.querySelector('[data-role=form]');
+        form.elements.status.addEventListener('change', (e) => {
+          dialog.querySelector('[data-role=end]').hidden = e.target.value === 'married';
+        });
+        form.addEventListener('submit', async (e) => {
           e.preventDefault();
           const fd = new FormData(e.target);
+          const status = fd.get('status');
           try {
-            await api.patch(`/unions/${unionId}`, { start_year: fd.get('start_year'), status: fd.get('status') });
+            await api.patch(`/unions/${unionId}`, { start_year: fd.get('start_year'), status, end_year: status === 'married' ? '' : fd.get('end_year') });
             close('saved');
           } catch (err) {
             toast(err.message, 'error');

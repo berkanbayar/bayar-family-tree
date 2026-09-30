@@ -54,7 +54,22 @@ Eski `index.html` sürümünün sütunları aynen desteklenir. Örnek dosya: [`d
 | `Hayatta` | `E` / `H` (Evet / Hayır da kabul edilir) |
 | `Evlilik ID` | Kişinin evliliği; aynı değere sahip iki kişi eştir |
 | `EBEVEYN Evlilik ID` | Kişinin anne-babasının `Evlilik ID` değeri |
+| `Evlilik Durumu` | `Evli` / `Boşandı` / `Vefatla sona erdi` (boşsa Evli) |
+| `Evlilik Bitiş Yılı` (veya `Boşanma Yılı`) | Boşanma ya da vefat yılı |
 | `Şehir`, `Meslek`, `Telefon`, `E-posta`, `Doğum Yeri`, `Kızlık Soyadı`, `Notlar`, `Evlilik Yılı` | İsteğe bağlı |
+
+Boşanma, ikinci evlilik ve vefat için örnek:
+
+| ID | Ad Soyad | Evlilik ID | Evlilik Durumu | Evlilik Bitiş Yılı | EBEVEYN Evlilik ID |
+|---|---|---|---|---|---|
+| 7a | Murat Bayar | E5 | Boşandı | 2010 | |
+| 7b | Murat Bayar | E6 | Evli | | |
+| 8 | Gül Tekin | E5 | | | |
+| 9 | Derya Bayar | E6 | | | |
+| 10 | Yusuf Bayar | | | | E5 |
+| 11 | Nil Bayar | | | | E6 |
+
+Bu durumda Yusuf'un sayfasında Derya **üvey anne**, Nil **baba bir kardeş** olarak görünür. Eşlerden biri vefat etmişse evlilik kendiliğinden "vefatla sona erdi" gösterilir.
 
 **Menü → Excel olarak indir** aynı formatta dosya üretir. Excel'de toplu düzenleme yapıp tekrar içe aktarabilirsiniz.
 

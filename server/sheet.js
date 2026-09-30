@@ -19,6 +19,8 @@ const ALIASES = {
   notes: ['notlar', 'not', 'notes'],
   marriageId: ['evlilikid', 'marriageid'],
   marriageYear: ['evlilikyili', 'marriageyear'],
+  marriageStatus: ['evlilikdurumu', 'medenihal', 'marriagestatus'],
+  marriageEndYear: ['evlilikbitisyili', 'bosanmayili', 'marriageendyear'],
   parentMarriageId: ['ebeveynevlilikid', 'ebeveynid', 'parentmarriageid'],
 };
 
@@ -63,6 +65,14 @@ function alive(v, birthYear, deathYear) {
   if (['h', 'hayir', '0', 'false', 'no', 'n', 'vefat'].includes(a)) return 0;
   if (deathYear) return 0;
   return birthYear && birthYear < new Date().getFullYear() - 100 ? 0 : 1;
+}
+
+function marriageStatus(v) {
+  const s = normalizeKey(v);
+  if (!s) return null;
+  if (s.startsWith('bosan') || s === 'ayrildi' || s === 'divorced') return 'divorced';
+  if (s.includes('vefat') || s.startsWith('dul') || s === 'widowed') return 'widowed';
+  return 'married';
 }
 
 function splitName(full) {
@@ -149,6 +159,8 @@ export function rowsToRecords(rows) {
     if (marriageId) {
       const u = ensureUnion(marriageId);
       u.start_year ??= year(r.marriageYear);
+      u.end_year ??= year(r.marriageEndYear);
+      u.status ??= marriageStatus(r.marriageStatus);
       const list = partnersOf.get(marriageId) ?? [];
       if (!list.includes(key)) list.push(key);
       partnersOf.set(marriageId, list);
@@ -163,6 +175,7 @@ export function rowsToRecords(rows) {
     }
     // Erkek eş varsa partner1 olarak sırala (görünüm tutarlılığı için)
     partners.sort((a, b) => (people.get(a).gender === 'E' ? -1 : 0) - (people.get(b).gender === 'E' ? -1 : 0));
+    u.status ??= 'married';
     u.partner1_key = partners[0] ?? null;
     u.partner2_key = partners[1] ?? null;
     if (!partners.length) warnings.push(`Evlilik ${mid}: ebeveyn olarak kullanılmış ama eşleri tanımlı değil`);
@@ -179,9 +192,12 @@ export function rowsToRecords(rows) {
   return { people: [...people.values()], unions: [...unions.values()], warnings };
 }
 
+const STATUS_TEXT = { married: 'Evli', divorced: 'Boşandı', widowed: 'Vefatla sona erdi' };
+
 export const EXPORT_COLUMNS = [
   'ID', 'Ad Soyad', 'Ad', 'Soyad', 'Kızlık Soyadı', 'Cinsiyet', 'Doğum Yılı', 'Vefat Yılı', 'Hayatta',
-  'Doğum Yeri', 'Şehir', 'Meslek', 'Telefon', 'E-posta', 'Notlar', 'Evlilik ID', 'Evlilik Yılı', 'EBEVEYN Evlilik ID',
+  'Doğum Yeri', 'Şehir', 'Meslek', 'Telefon', 'E-posta', 'Notlar',
+  'Evlilik ID', 'Evlilik Yılı', 'Evlilik Durumu', 'Evlilik Bitiş Yılı', 'EBEVEYN Evlilik ID',
 ];
 
 // Veritabanını, tekrar içe aktarılabilecek Excel satırlarına çevirir.
@@ -222,6 +238,8 @@ export function recordsToRows({ people, unions }) {
         ...base,
         'Evlilik ID': u ? `E${u.id}` : '',
         'Evlilik Yılı': u?.start_year ?? '',
+        'Evlilik Durumu': u ? STATUS_TEXT[u.status] : '',
+        'Evlilik Bitiş Yılı': u?.end_year ?? '',
       });
     });
   }
