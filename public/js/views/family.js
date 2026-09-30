@@ -7,6 +7,21 @@ import { avatar, confirmSheet, emptyState, html, openSheet, personRow, personTil
 
 const STATUS = { married: 'Evli', divorced: 'Boşandı', widowed: 'Eşi vefat etti' };
 
+const title = (icon, text) => html`<h3 class="section-title"><span class="st-icon">${icon}</span>${text}</h3>`;
+
+// Kişi kartının üstündeki küçük manzara (renkler CSS'ten gelir)
+const BANNER = raw(`
+  <svg viewBox="0 0 400 110" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <circle class="sun" cx="336" cy="34" r="16"/>
+    <g class="cloud"><ellipse cx="70" cy="30" rx="22" ry="9"/><ellipse cx="88" cy="24" rx="15" ry="11"/></g>
+    <g class="cloud small"><ellipse cx="250" cy="22" rx="16" ry="6"/><ellipse cx="262" cy="18" rx="10" ry="7"/></g>
+    <path class="hill2" d="M0 78 Q90 44 190 70 T400 58 V110 H0Z"/>
+    <path class="hill1" d="M0 92 Q120 66 250 88 T400 84 V110 H0Z"/>
+    <g class="tree-mini"><rect x="52" y="62" width="4" height="14" rx="2"/><circle cx="54" cy="58" r="10"/></g>
+    <g class="tree-mini"><rect x="356" y="56" width="4" height="14" rx="2"/><circle cx="358" cy="52" r="12"/></g>
+    <g class="tree-mini alt"><rect x="376" y="64" width="3" height="10" rx="1.5"/><circle cx="377.5" cy="61" r="7"/></g>
+  </svg>`);
+
 export function render(ctx, id) {
   const p = store.byId.get(id);
   if (!p) {
@@ -24,7 +39,7 @@ export function render(ctx, id) {
     ${contactSection(p)}
     ${familySection(p, editor)}
     ${siblingsSection(p)}
-    ${p.notes ? html`<section class="section"><h3 class="section-title">Notlar</h3><div class="card notes">${p.notes}</div></section>` : ''}
+    ${p.notes ? html`<section class="section">${title('📝', 'Notlar')}<div class="card notes">${p.notes}</div></section>` : ''}
   `.s;
 
   ctx.el.addEventListener('click', async (e) => {
@@ -45,9 +60,9 @@ function parentsSection(p, editor) {
   const addTile = html`<a class="ptile ptile-add" href="#/yeni?type=parent&anchor=${p.id}"><span class="avatar">＋</span><span class="ptile-name">Ebeveyn ekle</span></a>`;
   return html`
     <section class="section parents">
-      <h3 class="section-title">Anne &amp; Baba</h3>
-      <div class="tile-row">
-        ${parents.map((x) => personTile(x, x.gender === 'K' ? 'Anne' : x.gender === 'E' ? 'Baba' : 'Ebeveyn'))}
+      ${title('👪', 'Anne & Baba')}
+      <div class="tile-row couple">
+        ${parents.map((x, i) => html`${i ? raw('<span class="heart-link" aria-hidden="true">♥</span>') : ''}${personTile(x, x.gender === 'K' ? 'Anne' : x.gender === 'E' ? 'Baba' : 'Ebeveyn')}`)}
         ${canAdd ? addTile : ''}
       </div>
       ${editor && u ? html`<button class="link-btn" data-action="unlink-parents" type="button">Ebeveyn bağlantısını kaldır</button>` : ''}
@@ -64,14 +79,15 @@ function heroSection(p) {
   ].filter(Boolean);
   return html`
     <section class="card hero ${p.gender === 'E' ? 'is-male' : p.gender === 'K' ? 'is-female' : ''}">
-      ${avatar(p, 'xl')}
+      <div class="hero-banner">${BANNER}</div>
+      <div class="hero-avatar">${avatar(p, 'xl')}</div>
       <h2 class="hero-name">${fullName(p)}</h2>
       ${p.maiden_name ? html`<div class="muted small">Kızlık soyadı: ${p.maiden_name}</div>` : ''}
       <div class="hero-meta">
         <span>${[lifespan(p), a != null ? `${a} yaş${p.is_alive ? '' : 'ında vefat'}` : ''].filter(Boolean).join(' · ')}</span>
         <span class="badge ${p.is_alive ? 'badge-alive' : 'badge-deceased'}">${p.is_alive ? 'Hayatta' : 'Vefat'}</span>
       </div>
-      ${facts.length ? html`<div class="facts">${facts.map(([i, t]) => html`<span class="fact">${i} ${t}</span>`)}</div>` : ''}
+      ${facts.length ? html`<div class="facts">${facts.map(([i, t], n) => html`<span class="fact tone-${n}">${i} ${t}</span>`)}</div>` : ''}
       <div class="hero-actions">
         <a class="btn btn-soft" href="#/agac/${p.id}">🌳 Soyunu göster</a>
       </div>
@@ -83,7 +99,7 @@ function contactSection(p) {
   const links = p.phone ? phoneLinks(p.phone) : null;
   return html`
     <section class="section">
-      <h3 class="section-title">İletişim</h3>
+      ${title('📞', 'İletişim')}
       <div class="card contact">
         ${p.phone ? html`<div class="contact-row"><span>📱 ${p.phone}</span><span class="contact-actions"><a class="btn btn-sm btn-soft" href="${links.tel}">Ara</a><a class="btn btn-sm btn-soft" href="${links.whatsapp}" target="_blank" rel="noopener">WhatsApp</a></span></div>` : ''}
         ${p.email ? html`<div class="contact-row"><span>✉️ ${p.email}</span><a class="btn btn-sm btn-soft" href="mailto:${p.email}">E-posta</a></div>` : ''}
@@ -102,12 +118,12 @@ function familySection(p, editor) {
     return html`
       <div class="card union">
         <div class="union-head">
-          <span class="union-label">💍 ${label}${meta ? html` <span class="muted">· ${meta}</span>` : ''}</span>
+          <span class="union-label"><span class="ribbon">💍 ${label}</span>${meta ? html`<span class="muted small">${meta}</span>` : ''}</span>
           ${editor ? html`<button class="icon-btn sm" data-action="union" data-id="${u.id}" type="button" aria-label="Evliliği düzenle">⋯</button>` : ''}
         </div>
         ${partner ? personRow(partner) : html`<div class="muted small pad">Eş bilgisi girilmemiş</div>`}
         <div class="children">
-          <div class="children-title">${kids.length ? `Çocuklar (${kids.length})` : 'Çocuk kaydı yok'}</div>
+          <div class="children-title">🌱 ${kids.length ? `Çocuklar (${kids.length})` : 'Henüz çocuk kaydı yok'}</div>
           ${kids.map((c) => personRow(c))}
           ${editor ? html`<a class="add-row" href="#/yeni?type=child&anchor=${p.id}&union=${u.id}">＋ Çocuk ekle</a>` : ''}
         </div>
@@ -115,7 +131,7 @@ function familySection(p, editor) {
   });
   return html`
     <section class="section">
-      <h3 class="section-title">Eş &amp; Çocuklar</h3>
+      ${title('💞', 'Eş & Çocuklar')}
       ${blocks}
       ${editor
         ? html`<div class="btn-row">
@@ -131,7 +147,7 @@ function siblingsSection(p) {
   if (!sibs.length) return '';
   return html`
     <section class="section">
-      <h3 class="section-title">Kardeşler (${sibs.length})</h3>
+      ${title('🧸', `Kardeşler (${sibs.length})`)}
       <div class="tile-row scroll">${sibs.map((s) => personTile(s))}</div>
     </section>`;
 }

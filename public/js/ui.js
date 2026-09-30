@@ -30,7 +30,8 @@ export function html(strings, ...values) {
 // ---------- Kişi bileşenleri ----------
 export function avatar(p, size = '') {
   const cls = ['avatar', size, p.gender === 'E' ? 'is-male' : p.gender === 'K' ? 'is-female' : '', p.is_alive ? '' : 'is-deceased'];
-  return html`<span class="${cls.filter(Boolean).join(' ')}" aria-hidden="true">${initials(p)}</span>`;
+  const badge = !p.is_alive && size !== 'sm' ? raw('<span class="avatar-badge" title="Vefat">🕊️</span>') : '';
+  return html`<span class="${cls.filter(Boolean).join(' ')}" aria-hidden="true">${initials(p)}${badge}</span>`;
 }
 
 export function personMeta(p, { withCity = true } = {}) {
@@ -45,7 +46,7 @@ export function personRow(p, { sub, tag } = {}) {
     <a class="prow" href="#/kisi/${p.id}">
       ${avatar(p)}
       <span class="prow-text">
-        <span class="prow-name">${fullName(p)}${p.is_alive ? '' : raw(' <span class="dagger" title="Vefat">†</span>')}</span>
+        <span class="prow-name">${fullName(p)}</span>
         <span class="prow-sub">${sub ?? personMeta(p)}</span>
       </span>
       ${tag ? html`<span class="tag">${tag}</span>` : ''}
@@ -57,7 +58,8 @@ export function personTile(p, label) {
     <a class="ptile" href="#/kisi/${p.id}">
       ${avatar(p)}
       <span class="ptile-name">${p.first_name}</span>
-      <span class="ptile-sub">${label ?? lifespan(p)}</span>
+      ${label ? html`<span class="ptile-role">${label}</span>` : ''}
+      <span class="ptile-sub">${lifespan(p)}</span>
     </a>`;
 }
 
@@ -153,7 +155,7 @@ export function pickPerson({ title = 'Kişi seç', exclude = [] } = {}) {
 export function emptyState({ icon = '🌳', title, text, actions = '' }) {
   return html`
     <div class="empty">
-      <div class="empty-icon">${icon}</div>
+      <div class="empty-icon"><span>${icon}</span></div>
       <h2>${title}</h2>
       ${text ? html`<p class="muted">${text}</p>` : ''}
       <div class="empty-actions">${actions}</div>

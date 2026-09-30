@@ -17,17 +17,25 @@ export function render(ctx) {
   const alive = store.people.filter((p) => p.is_alive).length;
   const [icon, roleName, roleText] = ROLE_TEXT[store.role] ?? ROLE_TEXT.guest;
   const today = new Date().toISOString().slice(0, 10);
+  const generations = generationCount();
 
   ctx.el.innerHTML = html`
+    <section class="hello">
+      <div>
+        <div class="hello-hi">Merhaba! 👋</div>
+        <div class="hello-sub">Ailemizde <strong>${store.people.length}</strong> kişi, <strong>${generations}</strong> nesil var.</div>
+      </div>
+      <div class="hello-art" aria-hidden="true">🌳</div>
+    </section>
     <section class="stats">
-      <div class="stat"><strong>${store.people.length}</strong><span>Kişi</span></div>
-      <div class="stat"><strong>${couples}</strong><span>Aile</span></div>
-      <div class="stat"><strong>${alive}</strong><span>Hayatta</span></div>
-      <div class="stat"><strong>${generationCount()}</strong><span>Nesil</span></div>
+      <div class="stat tone-0"><span class="stat-emoji">👥</span><strong>${store.people.length}</strong><span>Kişi</span></div>
+      <div class="stat tone-1"><span class="stat-emoji">💞</span><strong>${couples}</strong><span>Aile</span></div>
+      <div class="stat tone-2"><span class="stat-emoji">💚</span><strong>${alive}</strong><span>Hayatta</span></div>
+      <div class="stat tone-3"><span class="stat-emoji">🌳</span><strong>${generations}</strong><span>Nesil</span></div>
     </section>
 
     <section class="section">
-      <h3 class="section-title">Oturum</h3>
+      <h3 class="section-title"><span class="st-icon">🔑</span>Oturum</h3>
       <div class="card session">
         <div class="session-info"><span class="session-icon">${icon}</span><div><strong>${roleName}</strong><div class="muted small">${roleText}</div></div></div>
         ${store.mode === 'open'
@@ -41,14 +49,14 @@ export function render(ctx) {
     ${editor
       ? html`
         <section class="section">
-          <h3 class="section-title">Kayıt</h3>
+          <h3 class="section-title"><span class="st-icon">✍️</span>Kayıt</h3>
           <div class="card list">
             <a class="menu-row" href="#/yeni"><span>➕</span><span>Yeni kişi ekle</span></a>
           </div>
         </section>
 
         <section class="section">
-          <h3 class="section-title">Veri</h3>
+          <h3 class="section-title"><span class="st-icon">🗂️</span>Veri</h3>
           <div class="card list">
             <label class="menu-row"><span>📥</span><span>Excel / CSV içe aktar<small>Mevcut verinin yerine geçer</small></span><input type="file" accept=".xlsx,.xls,.csv" data-role="import" hidden></label>
             <button class="menu-row" type="button" data-action="export-xlsx"><span>📊</span><span>Excel olarak indir<small>Tekrar içe aktarılabilir formatta</small></span></button>
