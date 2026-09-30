@@ -25,7 +25,16 @@ export async function readSheetRows(file) {
   const buf = await file.arrayBuffer();
   const wb = XLSX.read(buf, { type: 'array', cellDates: true, codepage: 65001 });
   const sheet = wb.Sheets[wb.SheetNames[0]];
-  return XLSX.utils.sheet_to_json(sheet, { defval: '', raw: true });
+  const rows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: true });
+  return rows.map((row) => Object.fromEntries(Object.entries(row).map(([k, v]) => [k, v instanceof Date ? isoDay(v) : v])));
+}
+
+// Excel tarihleri eski yıllarda saat dilimi yüzünden gece yarısından birkaç dakika önceye düşebilir;
+// 12 saat ekleyip günü yerel saate göre alarak doğru takvim gününü buluruz.
+function isoDay(d) {
+  const t = new Date(d.getTime() + 12 * 3600e3);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`;
 }
 
 export async function downloadXlsx(rows, filename) {

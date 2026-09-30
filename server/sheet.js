@@ -8,8 +8,12 @@ const ALIASES = {
   lastName: ['soyad', 'soyadi', 'lastname', 'surname'],
   maidenName: ['kizliksoyadi', 'kizliksoyad', 'maidenname'],
   gender: ['cinsiyet', 'gender'],
-  birthYear: ['dogumyili', 'dogumtarihi', 'birthyear'],
-  deathYear: ['vefatyili', 'olumyili', 'vefattarihi', 'deathyear'],
+  birthYear: ['dogumyili', 'birthyear'],
+  birthDate: ['dogumtarihi', 'birthdate'],
+  deathYear: ['vefatyili', 'olumyili', 'deathyear'],
+  deathDate: ['vefattarihi', 'olumtarihi', 'deathdate'],
+  deathPlace: ['vefatyeri', 'olumyeri', 'deathplace'],
+  burialPlace: ['mezaryeri', 'kabiryeri', 'definyeri', 'kabir', 'burialplace'],
   alive: ['hayatta', 'hayattaeh', 'alive'],
   birthPlace: ['dogumyeri', 'birthplace'],
   city: ['sehir', 'il', 'city'],
@@ -50,6 +54,28 @@ function year(v) {
   if (v instanceof Date) return v.getFullYear();
   const m = str(v).match(/\b(1\d{3}|20\d{2}|21\d{2})\b/);
   return m ? Number(m[1]) : null;
+}
+
+/**
+ * "12.03.1948", "12/03/1948", "1948-03-12", "12.03" (yılsız) veya "1948" okur.
+ * Geçersiz gün/ay atılır; dönen alanlar null olabilir.
+ */
+export function parseDate(v) {
+  const empty = { day: null, month: null, year: null };
+  if (v instanceof Date && !Number.isNaN(v.getTime())) {
+    return { day: v.getDate(), month: v.getMonth() + 1, year: v.getFullYear() };
+  }
+  const s = str(v);
+  if (!s) return empty;
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  let parts = m ? { year: +m[1], month: +m[2], day: +m[3] } : null;
+  if (!parts && (m = s.match(/^(\d{1,2})[./-](\d{1,2})(?:[./-](\d{4}))?$/))) {
+    parts = { day: +m[1], month: +m[2], year: m[3] ? +m[3] : null };
+  }
+  if (!parts) return { ...empty, year: year(s) };
+  const { day, month, year: y } = parts;
+  const valid = month >= 1 && month <= 12 && day >= 1 && day <= new Date(Date.UTC(y ?? 2000, month, 0)).getUTCDate();
+  return valid ? { day, month, year: y } : { ...empty, year: y };
 }
 
 function gender(v) {
@@ -125,8 +151,11 @@ export function rowsToRecords(rows) {
 
     let person = people.get(key);
     if (!person) {
-      const birthYear = year(r.birthYear);
-      const deathYear = year(r.deathYear);
+      const birth = parseDate(r.birthDate);
+      const death = parseDate(r.deathDate);
+      const birthYear = year(r.birthYear) ?? birth.year;
+      const deathYear = year(r.deathYear) ?? death.year;
+      const isAlive = alive(r.alive, birthYear, deathYear || death.month || str(r.burialPlace));
       person = {
         key,
         legacy_id: rawId || null,
@@ -135,9 +164,15 @@ export function rowsToRecords(rows) {
         maiden_name: str(r.maidenName),
         gender: gender(r.gender),
         birth_year: birthYear,
-        death_year: deathYear,
-        is_alive: alive(r.alive, birthYear, deathYear),
+        birth_month: birth.month,
+        birth_day: birth.day,
+        death_year: isAlive ? null : deathYear,
+        death_month: isAlive ? null : death.month,
+        death_day: isAlive ? null : death.day,
+        is_alive: isAlive,
         birth_place: str(r.birthPlace),
+        death_place: isAlive ? '' : str(r.deathPlace),
+        burial_place: isAlive ? '' : str(r.burialPlace),
         city: str(r.city),
         job: str(r.job),
         phone: str(r.phone),
@@ -192,11 +227,17 @@ export function rowsToRecords(rows) {
   return { people: [...people.values()], unions: [...unions.values()], warnings };
 }
 
+const pad = (n) => String(n).padStart(2, '0');
+function formatDate(day, month, y) {
+  if (!day || !month) return '';
+  return y ? `${pad(day)}.${pad(month)}.${y}` : `${pad(day)}.${pad(month)}`;
+}
+
 const STATUS_TEXT = { married: 'Evli', divorced: 'Boşandı', widowed: 'Vefatla sona erdi' };
 
 export const EXPORT_COLUMNS = [
-  'ID', 'Ad Soyad', 'Ad', 'Soyad', 'Kızlık Soyadı', 'Cinsiyet', 'Doğum Yılı', 'Vefat Yılı', 'Hayatta',
-  'Doğum Yeri', 'Şehir', 'Meslek', 'Telefon', 'E-posta', 'Notlar',
+  'ID', 'Ad Soyad', 'Ad', 'Soyad', 'Kızlık Soyadı', 'Cinsiyet', 'Doğum Yılı', 'Doğum Tarihi', 'Hayatta',
+  'Vefat Yılı', 'Vefat Tarihi', 'Vefat Yeri', 'Mezar Yeri', 'Doğum Yeri', 'Şehir', 'Meslek', 'Telefon', 'E-posta', 'Notlar',
   'Evlilik ID', 'Evlilik Yılı', 'Evlilik Durumu', 'Evlilik Bitiş Yılı', 'EBEVEYN Evlilik ID',
 ];
 
@@ -220,7 +261,11 @@ export function recordsToRows({ people, unions }) {
       'Kızlık Soyadı': p.maiden_name ?? '',
       Cinsiyet: p.gender,
       'Doğum Yılı': p.birth_year ?? '',
+      'Doğum Tarihi': formatDate(p.birth_day, p.birth_month, p.birth_year),
       'Vefat Yılı': p.death_year ?? '',
+      'Vefat Tarihi': formatDate(p.death_day, p.death_month, p.death_year),
+      'Vefat Yeri': p.death_place ?? '',
+      'Mezar Yeri': p.burial_place ?? '',
       Hayatta: p.is_alive ? 'E' : 'H',
       'Doğum Yeri': p.birth_place ?? '',
       Şehir: p.city ?? '',

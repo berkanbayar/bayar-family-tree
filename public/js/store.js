@@ -1,7 +1,6 @@
 import { api } from './api.js';
 
 const collator = new Intl.Collator('tr', { sensitivity: 'base' });
-const THIS_YEAR = new Date().getFullYear();
 
 export const store = {
   loaded: false,
@@ -76,10 +75,50 @@ export function lifespan(p) {
   return `${p.birth_year ?? '?'} – ${p.death_year ?? '?'}`;
 }
 
-export function age(p) {
+export const MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+
+export function formatDate(day, month, year) {
+  if (month) return [day, MONTHS[month - 1], year].filter(Boolean).join(' ');
+  return year ? String(year) : '';
+}
+export const birthDate = (p) => formatDate(p.birth_day, p.birth_month, p.birth_year);
+export const deathDate = (p) => formatDate(p.death_day, p.death_month, p.death_year);
+
+// Gün/ay biliniyorsa tam yaş; bilinmiyorsa yıl farkı
+export function age(p, today = new Date()) {
   if (!p.birth_year) return null;
-  const end = p.is_alive ? THIS_YEAR : p.death_year;
-  return end ? end - p.birth_year : null;
+  const end = p.is_alive
+    ? { y: today.getFullYear(), m: today.getMonth() + 1, d: today.getDate() }
+    : { y: p.death_year, m: p.death_month, d: p.death_day };
+  if (!end.y) return null;
+  let years = end.y - p.birth_year;
+  if (p.birth_month && end.m && (end.m < p.birth_month || (end.m === p.birth_month && p.birth_day && end.d && end.d < p.birth_day))) years--;
+  return years;
+}
+
+const isLeap = (y) => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+
+/**
+ * Önümüzdeki `days` gün içindeki doğum günleri (hayattakiler) ve anma günleri (vefat edenler).
+ * 29 Şubat doğumlular artık olmayan yıllarda 28 Şubat'ta kutlanır.
+ */
+export function upcomingEvents(people, { today = new Date(), days = 30 } = {}) {
+  const start = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+  const events = [];
+  const add = (person, type, month, day, baseYear) => {
+    for (const y of [today.getFullYear(), today.getFullYear() + 1]) {
+      const d = month === 2 && day === 29 && !isLeap(y) ? 28 : day;
+      const inDays = Math.round((Date.UTC(y, month - 1, d) - start) / 864e5);
+      if (inDays < 0) continue;
+      if (inDays <= days) events.push({ person, type, month, day, inDays, years: baseYear ? y - baseYear : null });
+      break;
+    }
+  };
+  for (const p of people) {
+    if (p.is_alive && p.birth_month && p.birth_day) add(p, 'birthday', p.birth_month, p.birth_day, p.birth_year);
+    if (!p.is_alive && p.death_month && p.death_day) add(p, 'memorial', p.death_month, p.death_day, p.death_year);
+  }
+  return events.sort((a, b) => a.inDays - b.inDays || compareNames(a.person, b.person));
 }
 
 export function trLower(s) {

@@ -11,9 +11,15 @@ const PERSON_SCHEMA = {
   maiden_name: 'text',
   gender: 'gender',
   birth_year: 'year',
+  birth_month: 'month',
+  birth_day: 'day',
   death_year: 'year',
+  death_month: 'month',
+  death_day: 'day',
   is_alive: 'bool',
   birth_place: 'text',
+  death_place: 'text',
+  burial_place: 'text',
   city: 'text',
   job: 'text',
   phone: 'text',
@@ -48,6 +54,14 @@ function cleanValue(type, value, field) {
       if (!Number.isInteger(y) || y < 1000 || y > 2200) throw badRequest(`Geçersiz yıl (${field}): ${value}`);
       return y;
     }
+    case 'month':
+    case 'day': {
+      if (value === '' || value == null) return null;
+      const n = Number(value);
+      const max = type === 'month' ? 12 : 31;
+      if (!Number.isInteger(n) || n < 1 || n > max) throw badRequest(`Geçersiz ${type === 'month' ? 'ay' : 'gün'}: ${value}`);
+      return n;
+    }
     case 'bool':
       return value === true || value === 1 || value === '1' || value === 'true' ? 1 : 0;
     case 'id': {
@@ -81,6 +95,27 @@ export function cleanPerson(input, { partial = false } = {}) {
   if (!partial && !('is_alive' in input)) p.is_alive = 1;
   if ('first_name' in p && !p.first_name) throw badRequest('Ad alanı zorunludur');
   return p;
+}
+
+const DEATH_FIELDS = { death_year: null, death_month: null, death_day: null, death_place: '', burial_place: '' };
+
+// Birleşik (mevcut + yeni) kayıt üzerinde tarih tutarlılığını kontrol eder.
+export function checkDates(p) {
+  for (const [label, prefix] of [['Doğum', 'birth'], ['Vefat', 'death']]) {
+    const y = p[`${prefix}_year`];
+    const m = p[`${prefix}_month`];
+    const d = p[`${prefix}_day`];
+    if (d != null && m == null) throw badRequest(`${label} günü girildiyse ayı da girilmeli`);
+    if (d != null && d > new Date(Date.UTC(y ?? 2000, m, 0)).getUTCDate()) {
+      throw badRequest(`${label} tarihi geçersiz: ${d}.${m}${y ? '.' + y : ''}`);
+    }
+  }
+  if (p.birth_year && p.death_year && p.death_year < p.birth_year) throw badRequest('Vefat yılı doğum yılından önce olamaz');
+}
+
+// Hayatta olan kişinin vefat bilgileri boşaltılır.
+function normalizeDeath(data, merged) {
+  if (merged.is_alive) Object.assign(data, DEATH_FIELDS);
 }
 
 export function stripPrivate(person) {
@@ -247,6 +282,8 @@ export function createRepo(db) {
 
     createPerson: db.transaction((input, relation) => {
       const data = cleanPerson(input);
+      normalizeDeath(data, data);
+      checkDates(data);
       const parentUnion = data.parent_union_id;
       delete data.parent_union_id;
       const id = insertPerson(data);
@@ -256,8 +293,10 @@ export function createRepo(db) {
     }),
 
     updatePerson: db.transaction((id, input) => {
-      getPerson(id);
+      const current = getPerson(id);
       const data = cleanPerson(input, { partial: true });
+      normalizeDeath(data, { ...current, ...data });
+      checkDates({ ...current, ...data });
       if ('parent_union_id' in data) assertParentUnion(id, data.parent_union_id);
       update('persons', id, data);
       return getPerson(id);

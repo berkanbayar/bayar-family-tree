@@ -1,6 +1,6 @@
 import { api } from '../api.js';
 import { refresh } from '../app.js';
-import { canEdit, fullName, parentsOf, partnersOf, store } from '../store.js';
+import { MONTHS, canEdit, fullName, parentsOf, partnersOf, store } from '../store.js';
 import { confirmSheet, emptyState, html, personRow, pickPerson, raw, toast } from '../ui.js';
 
 const REL = {
@@ -10,7 +10,8 @@ const REL = {
 };
 
 const EMPTY = {
-  first_name: '', last_name: '', maiden_name: '', gender: '', birth_year: '', death_year: '', is_alive: 1,
+  first_name: '', last_name: '', maiden_name: '', gender: '', is_alive: 1,
+  birth_year: '', birth_month: '', birth_day: '', death_year: '', death_month: '', death_day: '', death_place: '', burial_place: '',
   birth_place: '', city: '', job: '', phone: '', email: '', notes: '',
 };
 
@@ -33,6 +34,23 @@ function defaultsFor(rel) {
   }
   return d;
 }
+
+// Gün / Ay / Yıl: her biri isteğe bağlı (örn. sadece doğum günü biliniyorsa yıl boş kalabilir)
+const dateInput = (prefix, label, v) => html`
+  <div class="field">
+    <span>${label}</span>
+    <div class="date-row">
+      <select class="input" name="${prefix}_day" aria-label="Gün">
+        <option value="">Gün</option>
+        ${Array.from({ length: 31 }, (_, i) => i + 1).map((d) => html`<option value="${d}" ${v[`${prefix}_day`] === d ? raw('selected') : ''}>${d}</option>`)}
+      </select>
+      <select class="input" name="${prefix}_month" aria-label="Ay">
+        <option value="">Ay</option>
+        ${MONTHS.map((m, i) => html`<option value="${i + 1}" ${v[`${prefix}_month`] === i + 1 ? raw('selected') : ''}>${m}</option>`)}
+      </select>
+      <input class="input" name="${prefix}_year" value="${v[`${prefix}_year`] ?? ''}" inputmode="numeric" maxlength="4" placeholder="Yıl" aria-label="Yıl">
+    </div>
+  </div>`;
 
 const input = (name, label, value, extra = '') =>
   html`<label class="field"><span>${label}</span><input class="input" name="${name}" value="${value ?? ''}" ${raw(extra)}></label>`;
@@ -86,16 +104,19 @@ export function render(ctx, id) {
       </div>
 
       <div class="card form-card">
-        <div class="grid2">
-          ${input('birth_year', 'Doğum yılı', v.birth_year, 'inputmode="numeric" maxlength="4" placeholder="örn. 1950"')}
-          <div data-role="death" ${v.is_alive ? raw('hidden') : ''}>${input('death_year', 'Vefat yılı', v.death_year, 'inputmode="numeric" maxlength="4"')}</div>
-        </div>
+        ${dateInput('birth', '🎂 Doğum tarihi', v)}
+        <p class="muted small hint">Gün ve ay girilirse doğum günü hatırlatılır. Bilinmeyen kısımları boş bırakın.</p>
+        ${input('birth_place', 'Doğum yeri', v.birth_place)}
         <label class="switch">
           <input type="checkbox" name="is_alive" ${v.is_alive ? raw('checked') : ''}>
           <span class="switch-track"></span>
           <span>Hayatta</span>
         </label>
-        ${input('birth_place', 'Doğum yeri', v.birth_place)}
+        <div class="death-box" data-role="death" ${v.is_alive ? raw('hidden') : ''}>
+          ${dateInput('death', '🕊️ Vefat tarihi', v)}
+          ${input('death_place', 'Vefat yeri', v.death_place, 'placeholder="örn. Çorum"')}
+          ${input('burial_place', '🪦 Mezar yeri', v.burial_place, 'placeholder="örn. Çorum Asri Mezarlığı, 12. ada"')}
+        </div>
         ${input('city', 'Yaşadığı şehir', v.city)}
         ${input('job', 'Meslek', v.job)}
       </div>
@@ -126,7 +147,7 @@ export function render(ctx, id) {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(form));
     data.is_alive = form.elements.is_alive.checked;
-    if (data.is_alive) data.death_year = '';
+    if (data.is_alive) Object.assign(data, { death_year: '', death_month: '', death_day: '', death_place: '', burial_place: '' });
     if (!data.first_name.trim()) {
       toast('Ad alanı zorunlu', 'error');
       form.elements.first_name.focus();

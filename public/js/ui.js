@@ -40,7 +40,7 @@ export function personMeta(p, { withCity = true } = {}) {
   return parts.filter(Boolean).join(' · ');
 }
 
-export function personRow(p, { sub, tag } = {}) {
+export function personRow(p, { sub, tag, tagClass = '' } = {}) {
   if (!p) return '';
   return html`
     <a class="prow" href="#/kisi/${p.id}">
@@ -49,7 +49,7 @@ export function personRow(p, { sub, tag } = {}) {
         <span class="prow-name">${fullName(p)}</span>
         <span class="prow-sub">${sub ?? personMeta(p)}</span>
       </span>
-      ${tag ? html`<span class="tag">${tag}</span>` : ''}
+      ${tag ? html`<span class="tag ${tagClass}">${tag}</span>` : ''}
     </a>`;
 }
 

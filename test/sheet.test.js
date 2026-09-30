@@ -93,3 +93,25 @@ test('boşanma ve ikinci evlilik Excel üzerinden korunur', () => {
   const statuses = again.unions.map((u) => [u.status, u.end_year ?? null]).sort();
   assert.deepEqual(statuses, [['divorced', 2010], ['married', null]]);
 });
+
+test('tam tarih, vefat ve mezar yeri Excel üzerinden korunur', () => {
+  const rows = [
+    { ID: '1', 'Ad Soyad': 'Hasan Bayar', 'Doğum Tarihi': '23.04.1920', 'Vefat Tarihi': '1992-06-05', 'Vefat Yeri': 'Çorum', 'Mezar Yeri': 'Çorum Asri Mezarlığı' },
+    { ID: '2', 'Ad Soyad': 'Ece Bayar', 'Doğum Tarihi': '12.03', 'Doğum Yılı': 2009, Hayatta: 'E', 'Mezar Yeri': 'olmamalı' },
+    { ID: '3', 'Ad Soyad': 'Hatalı Tarih', 'Doğum Tarihi': '31.02.1950' },
+  ];
+  const { people } = rowsToRecords(rows);
+  const [hasan, ece, bad] = people;
+  assert.deepEqual([hasan.birth_day, hasan.birth_month, hasan.birth_year], [23, 4, 1920]);
+  assert.deepEqual([hasan.death_day, hasan.death_month, hasan.death_year, hasan.is_alive], [5, 6, 1992, 0]);
+  assert.equal(hasan.burial_place, 'Çorum Asri Mezarlığı');
+  assert.deepEqual([ece.birth_day, ece.birth_month, ece.birth_year, ece.is_alive], [12, 3, 2009, 1]);
+  assert.equal(ece.burial_place, '', 'hayattaki kişiye mezar yeri yazılmamalı');
+  assert.deepEqual([bad.birth_day, bad.birth_month, bad.birth_year], [null, null, 1950]);
+
+  const repo = createRepo(openDb(':memory:'));
+  repo.replaceAll({ people, unions: [] });
+  const again = rowsToRecords(recordsToRows(repo.getFamily({ includePrivate: true }))).people;
+  const pick = (p) => [p.first_name, p.birth_day, p.birth_month, p.birth_year, p.death_day, p.death_month, p.death_year, p.death_place, p.burial_place];
+  assert.deepEqual(again.map(pick), people.map(pick));
+});

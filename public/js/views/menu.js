@@ -1,7 +1,7 @@
 import { api } from '../api.js';
 import { refresh } from '../app.js';
-import { canEdit, generationCount, loadSession, store } from '../store.js';
-import { confirmSheet, html, toast } from '../ui.js';
+import { MONTHS, canEdit, generationCount, loadSession, store, upcomingEvents } from '../store.js';
+import { confirmSheet, html, personRow, toast } from '../ui.js';
 import { downloadXlsx, readSheetRows } from '../xlsx.js';
 
 const ROLE_TEXT = {
@@ -33,6 +33,8 @@ export function render(ctx) {
       <div class="stat tone-2"><span class="stat-emoji">💚</span><strong>${alive}</strong><span>Hayatta</span></div>
       <div class="stat tone-3"><span class="stat-emoji">🌳</span><strong>${generations}</strong><span>Nesil</span></div>
     </section>
+
+    ${upcomingSection()}
 
     <section class="section">
       <h3 class="section-title"><span class="st-icon">🔑</span>Oturum</h3>
@@ -102,6 +104,29 @@ export function render(ctx) {
       toast(err.message, 'error');
     }
   });
+}
+
+const whenText = (n) => (n === 0 ? 'Bugün 🎉' : n === 1 ? 'Yarın' : `${n} gün`);
+
+function upcomingSection() {
+  const events = upcomingEvents(store.people, { days: 30 });
+  const anyDates = store.people.some((p) => p.birth_month && p.birth_day);
+  const rows = events.map((e) => {
+    const date = `${e.day} ${MONTHS[e.month - 1]}`;
+    const sub = e.type === 'birthday'
+      ? `🎂 ${date}${e.years ? ` · ${e.years} yaşına giriyor` : ''}`
+      : `🕯️ ${date}${e.years ? ` · Vefatının ${e.years}. yılı` : ' · Anma günü'}`;
+    return personRow(e.person, { sub, tag: whenText(e.inDays), tagClass: e.inDays === 0 ? 'is-today' : '' });
+  });
+  return html`
+    <section class="section">
+      <h3 class="section-title"><span class="st-icon">🎈</span>Yaklaşan günler</h3>
+      ${rows.length
+        ? html`<div class="card list upcoming">${rows}</div>`
+        : html`<div class="card empty-card muted small">${anyDates
+            ? 'Önümüzdeki 30 günde doğum günü veya anma günü yok.'
+            : 'Kişilere doğum günü ve ayı eklendikçe doğum günleri burada hatırlatılır 🎂'}</div>`}
+    </section>`;
 }
 
 async function importSheet(file, ctx) {

@@ -1,7 +1,7 @@
 import { api } from '../api.js';
 import { refresh, rememberPerson } from '../app.js';
 import {
-  UNION_STATES, age, canEdit, childrenOf, fullName, halfSiblingsOf, lifespan, parentUnion, parentsOf, partnerIn, siblingsOf,
+  UNION_STATES, age, birthDate, canEdit, deathDate, childrenOf, fullName, halfSiblingsOf, lifespan, parentUnion, parentsOf, partnerIn, siblingsOf,
   stepChildrenIn, stepParentsOf, store, unionState, unionsOf,
 } from '../store.js';
 import { avatar, confirmSheet, emptyState, html, openSheet, personRow, personTile, phoneLinks, raw, toast } from '../ui.js';
@@ -37,6 +37,7 @@ export function render(ctx, id) {
   ctx.el.innerHTML = html`
     ${parentsSection(p, editor)}
     ${heroSection(p)}
+    ${memorialSection(p)}
     ${contactSection(p)}
     ${familySection(p, editor)}
     ${siblingsSection(p)}
@@ -88,15 +89,43 @@ function heroSection(p) {
     <section class="card hero ${p.gender === 'E' ? 'is-male' : p.gender === 'K' ? 'is-female' : ''}">
       <div class="hero-banner">${BANNER}</div>
       <div class="hero-avatar">${avatar(p, 'xl')}</div>
+      ${isBirthdayToday(p) ? html`<div class="bday-banner">🎉 Bugün doğum günü! 🎂</div>` : ''}
       <h2 class="hero-name">${fullName(p)}</h2>
       ${p.maiden_name ? html`<div class="muted small">Kızlık soyadı: ${p.maiden_name}</div>` : ''}
       <div class="hero-meta">
-        <span>${[lifespan(p), a != null ? `${a} yaş${p.is_alive ? '' : 'ında vefat'}` : ''].filter(Boolean).join(' · ')}</span>
+        <span>${p.is_alive
+          ? [birthDate(p) && `🎂 ${birthDate(p)}`, a != null && `${a} yaş`].filter(Boolean).join(' · ')
+          : [lifespan(p), a != null && `${a} yaşında vefat`].filter(Boolean).join(' · ')}</span>
         <span class="badge ${p.is_alive ? 'badge-alive' : 'badge-deceased'}">${p.is_alive ? 'Hayatta' : 'Vefat'}</span>
       </div>
       ${facts.length ? html`<div class="facts">${facts.map(([i, t], n) => html`<span class="fact tone-${n}">${i} ${t}</span>`)}</div>` : ''}
       <div class="hero-actions">
         <a class="btn btn-soft" href="#/agac/${p.id}">🌳 Soyunu göster</a>
+      </div>
+    </section>`;
+}
+
+function isBirthdayToday(p) {
+  const t = new Date();
+  return p.is_alive && p.birth_month === t.getMonth() + 1 && p.birth_day === t.getDate();
+}
+
+function memorialSection(p) {
+  if (p.is_alive) return '';
+  const rows = [
+    deathDate(p) && ['🕊️', 'Vefat tarihi', deathDate(p)],
+    p.death_place && ['📍', 'Vefat yeri', p.death_place],
+    p.burial_place && ['🪦', 'Mezar yeri', p.burial_place],
+  ].filter(Boolean);
+  if (!rows.length) return '';
+  const maps = p.burial_place && `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.burial_place)}`;
+  return html`
+    <section class="section">
+      ${title('🕯️', 'Anma')}
+      <div class="card memorial">
+        ${rows.map(([icon, label, value]) => html`
+          <div class="mem-row"><span class="mem-icon">${icon}</span><span><span class="muted small">${label}</span><br><strong>${value}</strong></span></div>`)}
+        ${maps ? html`<a class="btn btn-soft full" href="${maps}" target="_blank" rel="noopener">🗺️ Mezarı haritada aç</a>` : ''}
       </div>
     </section>`;
 }

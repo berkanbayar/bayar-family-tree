@@ -73,6 +73,22 @@ describe('açık mod: aile ilişkileri', () => {
     assert.ok(!fam.unions.some((u) => u.partner1_id == null && u.partner2_id == null));
   });
 
+  test('tarih doğrulama ve vefat bilgileri', async () => {
+    assert.equal((await s.call('POST', '/people', { first_name: 'A', birth_day: 30, birth_month: 2 })).status, 400);
+    assert.equal((await s.call('POST', '/people', { first_name: 'A', birth_day: 5 })).status, 400);
+    assert.equal((await s.call('POST', '/people', { first_name: 'A', birth_year: 1990, death_year: 1980, is_alive: false })).status, 400);
+    const leap = await s.call('POST', '/people', { first_name: 'Nil', birth_day: 29, birth_month: 2 });
+    assert.equal(leap.status, 201, 'yılı bilinmeyen 29 Şubat kabul edilmeli');
+
+    const dede = (await s.call('POST', '/people', {
+      first_name: 'Dede', is_alive: false, death_year: 1992, death_month: 6, death_day: 5, burial_place: 'Çorum Asri Mezarlığı',
+    })).data;
+    assert.equal(dede.burial_place, 'Çorum Asri Mezarlığı');
+    // Hayatta işaretlenince vefat bilgileri temizlenir
+    const fixed = (await s.call('PATCH', `/people/${dede.id}`, { is_alive: true })).data;
+    assert.deepEqual([fixed.death_year, fixed.death_day, fixed.burial_place], [null, null, '']);
+  });
+
   test('geçersiz veri 400 döner', async () => {
     assert.equal((await s.call('POST', '/people', { first_name: '' })).status, 400);
     assert.equal((await s.call('POST', '/people', { first_name: 'A', birth_year: 'abc' })).status, 400);

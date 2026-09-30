@@ -31,7 +31,9 @@ Düzenleme (yönetici) yetkisi olanlar şunları yapabilir:
 - Yeni kayıt açmak yerine **listeden mevcut bir kişiyi bağlama**
 - Evlilik yılını ve durumunu (evli, boşandı, eşi vefat etti) düzenleme
 
-Telefon numaraları için tek dokunuşla **Ara** ve **WhatsApp** butonları var. Açık ve koyu tema desteklenir.
+Telefon numaraları için tek dokunuşla **Ara** ve **WhatsApp** butonları var.
+
+**Özel günler:** Menüde önümüzdeki 30 günün 🎂 doğum günleri ve 🕯️ anma günleri listelenir. Bugün bir özel gün varsa alt menüde nokta belirir ve kişinin sayfasında "Bugün doğum günü!" yazar. 29 Şubat doğumlular artık olmayan yıllarda 28 Şubat'ta hatırlatılır. Açık ve koyu tema desteklenir.
 
 ## Erişim modları
 
@@ -50,7 +52,9 @@ Eski `index.html` sürümünün sütunları aynen desteklenir. Örnek dosya: [`d
 | `ID` | Kişi numarası. Birden fazla evliliği olan kişi `3a`, `3b` gibi harf ekiyle tekrar yazılır |
 | `Ad Soyad` (veya ayrı `Ad`, `Soyad`) | Zorunlu |
 | `Cinsiyet` | `E` / `K` (Erkek / Kadın da kabul edilir) |
-| `Doğum Yılı`, `Vefat Yılı` | Yıl veya tarih |
+| `Doğum Yılı`, `Vefat Yılı` | Yıl |
+| `Doğum Tarihi`, `Vefat Tarihi` | `12.03.1948`, `1948-03-12` veya yılsız `12.03`. Gün ve ay girilirse doğum ve anma günleri hatırlatılır |
+| `Vefat Yeri`, `Mezar Yeri` | Kişi sayfasındaki 🕯️ Anma kartında görünür; mezar yeri haritada açılabilir |
 | `Hayatta` | `E` / `H` (Evet / Hayır da kabul edilir) |
 | `Evlilik ID` | Kişinin evliliği; aynı değere sahip iki kişi eştir |
 | `EBEVEYN Evlilik ID` | Kişinin anne-babasının `Evlilik ID` değeri |

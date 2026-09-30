@@ -1,5 +1,5 @@
 import { ApiError } from './api.js';
-import { loadFamily, loadSession, roots, store } from './store.js';
+import { loadFamily, loadSession, roots, store, upcomingEvents } from './store.js';
 import { emptyState, html, toast } from './ui.js';
 import * as editView from './views/edit.js';
 import * as familyView from './views/family.js';
@@ -92,6 +92,8 @@ async function route() {
       await loadFamily();
     }
     await routeDef.render(ctx, m.slice(1));
+    // Bugün doğum/anma günü varsa Menü sekmesinde nokta göster
+    document.querySelector('.tabbar [data-tab=menu]').classList.toggle('has-dot', store.loaded && upcomingEvents(store.people, { days: 0 }).length > 0);
   } catch (err) {
     if (err instanceof ApiError && err.status === 401) {
       navigate('#/giris', { replace: true });

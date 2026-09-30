@@ -3,17 +3,25 @@ import { loadConfig } from '../server/config.js';
 import { openDb } from '../server/db.js';
 import { createRepo } from '../server/repo.js';
 
+// Hatırlatıcılar görünsün diye bazı tarihler bugüne göre hesaplanır
+const inDays = (n) => {
+  const d = new Date(Date.now() + n * 864e5);
+  return { month: d.getMonth() + 1, day: d.getDate() };
+};
+const born = (n) => ({ birth_month: inDays(n).month, birth_day: inDays(n).day });
+const died = (n) => ({ death_month: inDays(n).month, death_day: inDays(n).day });
+
 const P = (key, first_name, last_name, gender, birth_year, extra = {}) => ({
   key, first_name, last_name, gender, birth_year, is_alive: 1, city: 'Çorum', ...extra,
 });
 
 export const SAMPLE = {
   people: [
-    P('hasan', 'Hasan', 'Örnek', 'E', 1920, { is_alive: 0, death_year: 1992, job: 'Çiftçi', birth_place: 'Çorum' }),
-    P('fatma', 'Fatma', 'Örnek', 'K', 1925, { is_alive: 0, death_year: 2008, maiden_name: 'Demir' }),
-    P('mehmet', 'Mehmet', 'Örnek', 'E', 1948, { job: 'Öğretmen', phone: '0555 000 00 01', parent_union_key: 'u1' }),
+    P('hasan', 'Hasan', 'Örnek', 'E', 1920, { is_alive: 0, death_year: 1992, ...died(12), job: 'Çiftçi', birth_place: 'Çorum', death_place: 'Çorum', burial_place: 'Çorum Asri Mezarlığı', birth_month: 4, birth_day: 23 }),
+    P('fatma', 'Fatma', 'Örnek', 'K', 1925, { is_alive: 0, death_year: 2008, death_month: 1, death_day: 17, maiden_name: 'Demir', death_place: 'Çorum', burial_place: 'Çorum Asri Mezarlığı' }),
+    P('mehmet', 'Mehmet', 'Örnek', 'E', 1948, { job: 'Öğretmen', phone: '0555 000 00 01', parent_union_key: 'u1', birth_month: 3, birth_day: 12 }),
     P('ayse', 'Ayşe', 'Örnek', 'K', 1952, { maiden_name: 'Kaya' }),
-    P('ali', 'Ali', 'Örnek', 'E', 1951, { is_alive: 0, death_year: 2015, city: 'Ankara', parent_union_key: 'u1' }),
+    P('ali', 'Ali', 'Örnek', 'E', 1951, { is_alive: 0, death_year: 2015, death_month: 11, death_day: 2, city: 'Ankara', parent_union_key: 'u1', death_place: 'Ankara', burial_place: 'Ankara Karşıyaka Mezarlığı' }),
     P('zeynep', 'Zeynep', 'Örnek', 'K', 1955, { city: 'Ankara', maiden_name: 'Şahin' }),
     P('emine', 'Emine', 'Yıldız', 'K', 1954, { city: 'İstanbul', maiden_name: 'Örnek', parent_union_key: 'u1' }),
     P('osman', 'Osman', 'Yıldız', 'E', 1950, { city: 'İstanbul' }),
@@ -23,9 +31,9 @@ export const SAMPLE = {
     P('can', 'Can', 'Arslan', 'E', 1977),
     P('murat', 'Murat', 'Örnek', 'E', 1980, { city: 'Ankara', parent_union_key: 'u3' }),
     P('deniz', 'Deniz', 'Yıldız', 'K', 1982, { city: 'İzmir', parent_union_key: 'u4' }),
-    P('kerem', 'Kerem', 'Örnek', 'E', 2005, { city: 'İstanbul', job: 'Öğrenci', parent_union_key: 'u5' }),
-    P('ece', 'Ece', 'Örnek', 'K', 2009, { city: 'İstanbul', job: 'Öğrenci', parent_union_key: 'u5' }),
-    P('ada', 'Ada', 'Arslan', 'K', 2012, { parent_union_key: 'u6' }),
+    P('kerem', 'Kerem', 'Örnek', 'E', 2005, { city: 'İstanbul', job: 'Öğrenci', parent_union_key: 'u5', ...born(5) }),
+    P('ece', 'Ece', 'Örnek', 'K', 2009, { city: 'İstanbul', job: 'Öğrenci', parent_union_key: 'u5', ...born(0) }),
+    P('ada', 'Ada', 'Arslan', 'K', 2012, { parent_union_key: 'u6', ...born(21) }),
     P('gul', 'Gül', 'Tekin', 'K', 1982, { city: 'Ankara' }),
     P('derya', 'Derya', 'Örnek', 'K', 1985, { city: 'Ankara', maiden_name: 'Uçar' }),
     P('yusuf', 'Yusuf', 'Örnek', 'E', 2006, { city: 'Ankara', job: 'Öğrenci', parent_union_key: 'u7' }),

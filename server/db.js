@@ -43,6 +43,15 @@ const MIGRATIONS = [
   CREATE INDEX idx_unions_partner1 ON unions(partner1_id);
   CREATE INDEX idx_unions_partner2 ON unions(partner2_id);
   `,
+  // v2: tam tarih (gün/ay ayrı; yıl bilinmese de doğum günü tutulabilir), vefat ve mezar yeri
+  `
+  ALTER TABLE persons ADD COLUMN birth_month INTEGER;
+  ALTER TABLE persons ADD COLUMN birth_day INTEGER;
+  ALTER TABLE persons ADD COLUMN death_month INTEGER;
+  ALTER TABLE persons ADD COLUMN death_day INTEGER;
+  ALTER TABLE persons ADD COLUMN death_place TEXT NOT NULL DEFAULT '';
+  ALTER TABLE persons ADD COLUMN burial_place TEXT NOT NULL DEFAULT '';
+  `,
 ];
 
 export function openDb(file) {

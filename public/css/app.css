@@ -243,6 +243,11 @@ button.prow::after { display: none; }
 .tag { flex: none; font-size: 11px; font-weight: 800; padding: 2px 9px; border-radius: 999px; background: var(--lilac-soft); color: var(--lilac); }
 
 .list { padding: 6px; }
+.tag.is-today { background: var(--peach-soft); color: var(--peach); }
+.upcoming .tag { background: var(--sun-soft); color: color-mix(in srgb, var(--sun) 60%, var(--text)); }
+.upcoming .tag.is-today { background: var(--peach); color: #fff; }
+.empty-card { padding: 16px; text-align: center; }
+.upcoming .prow-sub { white-space: normal; }
 .list > .prow + .prow { margin-top: 2px; }
 
 .tile-row { display: flex; gap: 12px; justify-content: center; align-items: center; }
@@ -331,6 +336,19 @@ button.prow::after { display: none; }
 .tone-2 { background: var(--primary-soft); }
 .tone-3 { background: var(--sun-soft); }
 .hero-actions { margin-top: 18px; }
+
+.bday-banner {
+  margin-top: 12px; padding: 6px 16px; border-radius: 999px; font-weight: 900; font-size: 14px;
+  background: linear-gradient(90deg, var(--sun-soft), var(--peach-soft), var(--female-soft));
+  animation: wiggle 2.5s ease-in-out infinite;
+}
+@keyframes wiggle { 0%, 100% { transform: rotate(0); } 10% { transform: rotate(-3deg); } 20% { transform: rotate(3deg); } 30% { transform: rotate(0); } }
+
+.memorial { padding: 8px 16px 16px; background: linear-gradient(170deg, var(--lilac-soft), var(--surface) 60%); }
+.mem-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+.mem-row + .mem-row { border-top: 1.5px dashed var(--border); }
+.mem-icon { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 14px; background: var(--surface); box-shadow: var(--shadow); font-size: 18px; }
+.memorial .btn { margin-top: 8px; }
 
 /* ============ İletişim, notlar ============ */
 .contact { padding: 6px 16px; }
@@ -466,6 +484,10 @@ details[open] > summary .tcount { background: var(--primary); color: var(--prima
 .form-card { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field > span { font-size: 13px; font-weight: 800; color: var(--muted); padding-left: 4px; }
+.date-row { display: grid; grid-template-columns: 1fr 1.6fr 1.2fr; gap: 8px; }
+.date-row select.input { appearance: none; -webkit-appearance: none; padding-right: 10px; }
+.hint { margin: -6px 4px 0; }
+.death-box { display: flex; flex-direction: column; gap: 14px; padding: 14px; border-radius: 18px; background: var(--lilac-soft); }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .segmented { display: flex; padding: 4px; gap: 4px; background: var(--surface-2); border-radius: 16px; }
 .segmented label { flex: 1; }
@@ -577,6 +599,11 @@ details[open] > summary .tcount { background: var(--primary); color: var(--prima
   transition: background .2s, color .2s;
 }
 .tab-icon { font-size: 22px; line-height: 1; filter: grayscale(1); opacity: .55; transition: transform .35s var(--spring), filter .2s, opacity .2s; }
+.tabbar a { position: relative; }
+.tabbar a.has-dot::after {
+  content: ""; position: absolute; top: 8px; left: calc(50% + 10px); width: 10px; height: 10px; border-radius: 50%;
+  background: var(--peach); border: 2px solid var(--surface); animation: heartbeat 2s ease-in-out infinite;
+}
 .tabbar a.active { background: var(--primary-soft); color: var(--primary-deep); }
 .tabbar a.active .tab-icon { filter: none; opacity: 1; transform: translateY(-2px) scale(1.15); }
 .tabbar a:active .tab-icon { transform: scale(.85); }
