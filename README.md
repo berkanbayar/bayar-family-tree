@@ -81,6 +81,8 @@ Bu durumda Yusuf'un sayfasında Derya **üvey anne**, Nil **baba bir kardeş** o
 
 ## Sunucuya alma
 
+> 📘 Hetzner + alt alan adı için adım adım rehber ve koordinatör oturumuna yapıştırılacak hazır talimat: [`docs/DEPLOY.md`](docs/DEPLOY.md)
+
 ### Docker (önerilen)
 
 ```bash

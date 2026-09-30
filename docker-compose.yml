@@ -1,14 +1,24 @@
 services:
   soyagaci:
     build: .
+    image: bayar-soyagaci:latest
+    container_name: bayar-soyagaci
     restart: unless-stopped
+    # Sadece sunucunun içinden erişilir; dış dünyaya ters vekil (Caddy / Nginx / Traefik) açar
     ports:
-      - "3000:3000"
+      - "127.0.0.1:${APP_PORT:-3000}:3000"
     env_file: .env
     environment:
       DB_PATH: /data/family.db
+      TRUST_PROXY: "1"
+      TZ: Europe/Istanbul
     volumes:
       - soyagaci-data:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
 volumes:
   soyagaci-data:
